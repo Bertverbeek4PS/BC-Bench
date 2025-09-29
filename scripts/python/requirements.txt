@@ -1,0 +1,7 @@
+# BC Bench Python Scripts Dependencies
+# Auto-generated from pyproject.toml
+
+jsonschema>=4.0
+python-dotenv>=1.0
+requests>=2.0
+unidiff>=0.7

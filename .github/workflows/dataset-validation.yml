@@ -1,0 +1,69 @@
+name: Dataset Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-dataset-schema:
+    runs-on: windows-latest
+    outputs:
+      versions: ${{ steps.get-versions.outputs.versions }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install Python dependencies
+      run: |
+        cd scripts/python
+        pip install -r requirements.txt
+
+    - name: Validate dataset schema
+      run: |
+        cd scripts/python
+        python validate_dataset_schema.py
+
+    - name: Get unique versions for matrix
+      id: get-versions
+      run: |
+        cd scripts/python
+        $uniqueVersions = python get_unique_versions.py
+        "versions=$uniqueVersions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      shell: pwsh
+
+  validate-bc-containers:
+    runs-on: windows-latest
+    needs: validate-dataset-schema
+    if: needs.validate-dataset-schema.outputs.versions != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.validate-dataset-schema.outputs.versions) }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install BcContainerHelper module
+      run: |
+        Install-Module -Name BcContainerHelper -Force -AllowClobber
+      shell: pwsh
+
+    - name: Setup validation environment for Version ${{ matrix.version }}
+      id: setup-env
+      env:
+        BC_CONTAINER_PASSWORD: ${{ secrets.BC_CONTAINER_PASSWORD }}
+        NAV_REPO_TOKEN: ${{ secrets.NAV_REPO_TOKEN }}
+      run: |
+        cd scripts/powershell
+        .\Setup-ValidationEnvironment.ps1 -Version "${{ matrix.version }}"
+      shell: pwsh
+
+    - name: Run dataset validation for Version ${{ matrix.version }}
+      run: |
+        cd scripts/powershell
+        .\Validate-Dataset.ps1 -Version "${{ matrix.version }}" -NAVClonePath "${{ steps.setup-env.outputs.nav_clone_path }}"
+      shell: pwsh
