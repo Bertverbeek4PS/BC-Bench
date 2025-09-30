@@ -1,6 +1,18 @@
 # DatasetReader.psm1 - Module for reading BC-Bench dataset
 # Provides classes and functions to read and parse the bcbench_nav.jsonl dataset
 
+class ValidationResult {
+    [string]$InstanceId
+    [string]$Status
+    [string]$Message
+
+    ValidationResult([string]$instanceId, [string]$status, [string]$message) {
+        $this.InstanceId = $instanceId
+        $this.Status = $status
+        $this.Message = $message
+    }
+}
+
 class DatasetEntry {
     # Properties based on the dataset schema
     [string]$repo

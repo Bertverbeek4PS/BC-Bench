@@ -21,14 +21,7 @@ param(
 
 Write-Log "Setting up validation environment for version $Version, Dataset Path: $DatasetPath" -Level Info
 
-# Handle password authentication using utility function
-try {
-    $credential = Get-BCCredential -Username $Username -Password $Password
-}
-catch {
-    Write-Error $_.Exception.Message
-    exit 1
-}
+[PSCredential]$credential = Get-BCCredential -Username $Username -Password $Password
 
 Write-Log "Loading dataset entries for version $Version..." -Level Info
 try {

@@ -63,6 +63,8 @@ jobs:
       shell: pwsh
 
     - name: Run dataset validation for Version ${{ matrix.version }}
+      env:
+        BC_CONTAINER_PASSWORD: ${{ secrets.BC_CONTAINER_PASSWORD }}
       run: |
         cd scripts/powershell
         .\Validate-Dataset.ps1 -Version "${{ matrix.version }}" -NAVClonePath "${{ steps.setup-env.outputs.nav_clone_path }}"

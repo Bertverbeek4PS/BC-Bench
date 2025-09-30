@@ -9,12 +9,19 @@ param(
     [string]$DatasetPath = "$PSScriptRoot\..\..\dataset\bcbench_nav.jsonl",
 
     [Parameter(Mandatory=$false)]
-    [string]$NAVClonePath
+    [string]$NAVClonePath,
+
+    [Parameter(Mandatory=$false)]
+    [string]$Username='admin',
+
+    [Parameter(Mandatory=$false)]
+    [SecureString]$Password
 )
 
 Write-Log "Running BC Bench Dataset Validation for version $Version, , Dataset Path: $DatasetPath ..." -Level Info
 
-# If NAVClonePath is not provided, determine it from the standard location
+[PSCredential]$credential = Get-BCCredential -Username $Username -Password $Password
+
 if (-not $NAVClonePath) {
     $NAVClonePath = Join-Path -Path $env:TEMP -ChildPath "NAV-$Version"
     Write-Log "Using default NAV clone path: $NAVClonePath" -Level Info
@@ -44,10 +51,10 @@ catch {
     exit 1
 }
 
-# Validate each dataset entry
-$validationResults = @()
-$successCount = 0
-$failureCount = 0
+[string] $containerName = Get-StandardContainerName -Version $Version
+[ValidationResult[]]$validationResults = @()
+[int]$successCount = 0
+[int]$failureCount = 0
 
 foreach ($entry in $versionEntries) {
     Write-Log "Validating entry: $($entry.instance_id)" -Level Info
@@ -57,35 +64,39 @@ foreach ($entry in $versionEntries) {
 
         Write-Log "Checking out base commit: $($entry.base_commit)" -Level Info
         $checkoutResult = git checkout $entry.base_commit 2>&1
-
-        if ($LASTEXITCODE -eq 0) {
-            Write-Log "Successfully checked out base commit for $($entry.instance_id)" -Level Success
-            $validationResults += [PSCustomObject]@{
-                InstanceId = $entry.instance_id
-                BaseCommit = $entry.base_commit
-                Status = "Success"
-                Message = "Base commit checkout successful"
-            }
-            $successCount++
-        } else {
-            Write-Log "Failed to checkout base commit for $($entry.instance_id): $checkoutResult" -Level Error
-            $validationResults += [PSCustomObject]@{
-                InstanceId = $entry.instance_id
-                BaseCommit = $entry.base_commit
-                Status = "Failed"
-                Message = "Git checkout failed: $checkoutResult"
-            }
-            $failureCount++
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to checkout base commit: $checkoutResult"
         }
+
+        Write-Log "Applying test patch for $($entry.instance_id)" -Level Info
+        $applyResult = git apply $entry.test_patch 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to apply test patch: $applyResult"
+        }
+        Write-Log "Test patch applied successfully" -Level Success
+
+        Write-Log "Building test project for $($entry.instance_id)" -Level Info
+        foreach ($projectPath in $entry.project_paths) {
+            [string]$fullProjectPath = Join-Path -Path $NAVClonePath -ChildPath $projectPath
+            Write-Log "Compiling app in path: $fullProjectPath" -Level Info
+            Compile-AppInBcContainer -containerName $containerName -appProjectFolder $fullProjectPath -credential $credential
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to compile app at $projectPath"
+            }
+        }
+        Write-Log "Build completed successfully" -Level Success
+
+        Write-Log "Running validation tests for $($entry.instance_id)" -Level Info
+        $testResults = Run-TestsInBcContainer -containerName $containerName -credential $credential -returnTrueIfAllPassed
+        Write-Log "Tests completed successfully" -Level Success
+
+        Write-Log "Successfully validated $($entry.instance_id)" -Level Success
+        $validationResults += [ValidationResult]::new($entry.instance_id, "Success", "Validation completed successfully")
+        $successCount++
     }
     catch {
         Write-Log "Exception while validating $($entry.instance_id): $($_.Exception.Message)" -Level Error
-        $validationResults += [PSCustomObject]@{
-            InstanceId = $entry.instance_id
-            BaseCommit = $entry.base_commit
-            Status = "Error"
-            Message = $_.Exception.Message
-        }
+        $validationResults += [ValidationResult]::new($entry.instance_id, "Failed", $_.Exception.Message)
         $failureCount++
     }
     finally {
