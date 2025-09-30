@@ -16,7 +16,10 @@ param(
     [string]$Username='admin',
 
     [Parameter(Mandatory=$false)]
-    [SecureString]$Password
+    [SecureString]$Password,
+
+    [Parameter(Mandatory=$false)]
+    [string]$NAVRepoPath
 )
 
 Write-Log "Setting up validation environment for version $Version, Dataset Path: $DatasetPath" -Level Info
@@ -72,14 +75,16 @@ if (-not $containerExists) {
 
 # Clone NAV repository while container is being created (or immediately if container exists)
 try {
-    [string] $navBranch = "releases/$Version"
-    [string] $navClonePath = Join-Path -Path $env:TEMP -ChildPath "NAV-$Version"
-    [string] $navURL = 'https://dynamicssmb2.visualstudio.com/Dynamics%20SMB/_git/NAV'
+    if (-not $NAVRepoPath) {
+        [string] $navBranch = "releases/$Version"
+        [string] $navClonePath = Join-Path -Path $env:TEMP -ChildPath "NAV-$Version"
+        [string] $navURL = 'https://dynamicssmb2.visualstudio.com/Dynamics%20SMB/_git/NAV'
 
-    Write-Log "Cloning NAV repository..." -Level Info
-    Invoke-GitCloneWithRetry -RepoUrl $navURL -Token $env:NAV_REPO_TOKEN -Branch $navBranch `
-        -ClonePath $navClonePath -PrefetchCommits ($versionEntries | Select-Object -ExpandProperty base_commit) `
-         -SparseCheckoutPaths ($versionEntries | ForEach-Object { $_.project_paths } | Where-Object { $_ })
+        Write-Log "Cloning NAV repository..." -Level Info
+        Invoke-GitCloneWithRetry -RepoUrl $navURL -Token $env:NAV_REPO_TOKEN -Branch $navBranch `
+            -ClonePath $navClonePath -PrefetchCommits ($versionEntries | Select-Object -ExpandProperty base_commit) `
+            -SparseCheckoutPaths ($versionEntries | ForEach-Object { $_.project_paths } | Where-Object { $_ })
+    }
 }
 catch {
     Write-Log "Failed to clone NAV repository: $($_.Exception.Message)" -Level Error
