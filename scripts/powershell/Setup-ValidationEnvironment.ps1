@@ -102,12 +102,7 @@ if ($containerJob) {
     }
 }
 
-# Output the NAV clone path for use by subsequent validation steps
-Write-Log "`nEnvironment setup completed successfully!" -Level Success
-
 # Set output for GitHub Actions or return path
 if ($env:GITHUB_OUTPUT) {
     "nav_clone_path=$navClonePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 }
-
-return $navClonePath

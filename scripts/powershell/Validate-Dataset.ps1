@@ -12,9 +12,7 @@ param(
     [string]$NAVClonePath
 )
 
-Write-Log "BC-Bench Dataset Validation Starting..." -Level Success
-Write-Log "Version: $Version" -Level Info
-Write-Log "Dataset Path: $DatasetPath" -Level Info
+Write-Log "Running BC Bench Dataset Validation for version $Version, , Dataset Path: $DatasetPath ..." -Level Info
 
 # If NAVClonePath is not provided, determine it from the standard location
 if (-not $NAVClonePath) {
@@ -24,13 +22,11 @@ if (-not $NAVClonePath) {
     Write-Log "Using provided NAV clone path: $NAVClonePath" -Level Info
 }
 
-# Verify NAV repository exists
 if (-not (Test-Path $NAVClonePath)) {
     Write-Error "NAV repository not found at: $NAVClonePath. Please run Setup-ValidationEnvironment.ps1 first."
     exit 1
 }
 
-# Load dataset entries for this version
 Write-Log "Loading dataset entries for version $Version..." -Level Info
 try {
     [DatasetEntry[]] $entries = Get-DatasetEntries -DatasetPath $DatasetPath
@@ -54,13 +50,11 @@ $successCount = 0
 $failureCount = 0
 
 foreach ($entry in $versionEntries) {
-    Write-Log "`nValidating entry: $($entry.instance_id)" -Level Info
+    Write-Log "Validating entry: $($entry.instance_id)" -Level Info
 
     try {
-        # Change to NAV repository directory
         Push-Location $NAVClonePath
 
-        # Perform git checkout base_commit
         Write-Log "Checking out base commit: $($entry.base_commit)" -Level Info
         $checkoutResult = git checkout $entry.base_commit 2>&1
 
@@ -95,7 +89,6 @@ foreach ($entry in $versionEntries) {
         $failureCount++
     }
     finally {
-        # Always return to original directory
         Pop-Location
     }
 }
@@ -107,10 +100,11 @@ Write-Log "Total entries processed: $($versionEntries.Count)" -Level Info
 Write-Log "Successful validations: $successCount" -Level Success
 Write-Log "Failed validations: $failureCount" -Level $(if ($failureCount -gt 0) { "Error" } else { "Info" })
 
-# Display detailed results
-Write-Host "`n" -NoNewline
-Write-Log "`Detailed Results:" -Level Warning
-$validationResults | Format-Table -Property InstanceId, Status, Message -AutoSize
+if ($env:RUNNER_DEBUG -eq '1') {
+    Write-Host "`n" -NoNewline
+    Write-Log "Detailed Results:" -Level Warning
+    $validationResults | Format-Table -Property InstanceId, Status, Message -AutoSize
+}
 
 # Exit with appropriate code
 if ($failureCount -gt 0) {

@@ -145,7 +145,7 @@ function Invoke-GitCloneWithRetry {
                 Write-Log "Repository cloned successfully to $ClonePath" -Level Success
 
                 if ($SparseCheckoutPaths -and $SparseCheckoutPaths.Count -gt 0) {
-                    Write-Log "Configuring sparse checkout for paths: $($SparseCheckoutPaths -join ', ')" -Level Debug
+                    Write-Log "Configuring sparse checkout for paths: $($SparseCheckoutPaths -join ', ')" -Level Info
 
                     $sparseInitResult = & git -C $ClonePath sparse-checkout init --cone 2>&1
                     if ($LASTEXITCODE -ne 0) {
@@ -175,8 +175,6 @@ function Invoke-GitCloneWithRetry {
 
                     Write-Log "Prefetch completed for specified commits" -Level Success
                 }
-
-                return $true
             } else {
                 throw "Git clone failed with exit code $LASTEXITCODE`: $cloneResult"
             }
@@ -192,8 +190,6 @@ function Invoke-GitCloneWithRetry {
             }
         }
     }
-
-    return $false
 }
 
 <#
