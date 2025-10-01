@@ -236,7 +236,6 @@ function Initialize-ContainerForDevelopment() {
             Start-NAVServerInstance -ServerInstance $server.ServerInstance
         }
 
-
     } -argumentList $BCContainerModule,$RepoVersion -usePwsh $false
 }
 
@@ -282,6 +281,9 @@ function New-BCContainerAsync {
         [string]$ContainerName,
 
         [Parameter(Mandatory = $true)]
+        [string]$Version,
+
+        [Parameter(Mandatory = $true)]
         [string]$ArtifactUrl,
 
         [Parameter(Mandatory = $true)]
@@ -300,16 +302,17 @@ function New-BCContainerAsync {
     Write-Log "Starting container creation job for: $ContainerName" -Level Info
 
     [System.Management.Automation.Job]$containerJob = Start-Job -ScriptBlock {
-        param([string] $url, [string] $containerName, [PSCredential] $credential, [bool] $acceptEula, [string] $authType, [string[]] $additionalFolders)
+        param([string] $url, [string] $containerName, [PSCredential] $credential, [bool] $acceptEula, [string] $authType, [string[]] $additionalFolders, [string] $version)
 
         Import-Module BcContainerHelper -Force -DisableNameChecking
 
         $params = @{
             artifactUrl = $url
-            containerName = $containerName
+            containerName = $ContainerName
             auth = $authType
             credential = $credential
             includeTestToolkit = $true
+            multitenant = $false
         }
 
         if ($acceptEula) {
@@ -326,7 +329,8 @@ function New-BCContainerAsync {
         }
 
         New-BCContainer @params
-    } -ArgumentList $ArtifactUrl, $ContainerName, $Credential, $AcceptEula, $AuthType, $AdditionalFolders
+        Initialize-ContainerForDevelopment -ContainerName $ContainerName -RepoVersion [System.Version]$Version
+    } -ArgumentList $ArtifactUrl, $ContainerName, $Credential, $AcceptEula, $AuthType, $AdditionalFolders, $Version
 
     Write-Log "Container creation job started (Job ID: $($containerJob.Id))" -Level Success
     return $containerJob

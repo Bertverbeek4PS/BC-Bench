@@ -57,11 +57,11 @@ Import-Module BcContainerHelper -Force -DisableNameChecking
 [string] $containerName = Get-StandardContainerName -Version $Version
 Write-Log "Container name: $containerName" -Level Info
 
-# Check if container already exists, if not create it
-[bool] $containerExists = Test-ContainerExists -containerName $containerName
 [System.Management.Automation.Job]$containerJob = $null
 
-if (-not $containerExists) {
+if (Test-ContainerExists -containerName $containerName) {
+    Write-Log "Container $containerName already exists, reusing it" -Level Warning
+} else {
     try {
         Write-Log "Creating container $containerName for version $Version..." -Level Info
 
@@ -70,14 +70,12 @@ if (-not $containerExists) {
         Write-Log "Retrieved artifact URL: $url" -Level Info
 
         # Create container asynchronously with NAV folder shared
-        $containerJob = New-BCContainerAsync -ContainerName $containerName -ArtifactUrl $url -Credential $credential -AdditionalFolders @($NAVRepoPath)
+        $containerJob = New-BCContainerAsync -ContainerName $containerName -Version $Version -ArtifactUrl $url -Credential $credential -AdditionalFolders @($NAVRepoPath)
     }
     catch {
         Write-Log "Failed to start container creation job for $containerName`: $($_.Exception.Message)" -Level Error
         exit 1
     }
-} else {
-    Write-Log "Container $containerName already exists, reusing it" -Level Warning
 }
 
 if (Test-Path $NAVRepoPath) {
