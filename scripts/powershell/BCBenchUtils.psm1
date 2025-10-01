@@ -227,7 +227,7 @@ function Wait-JobWithProgress {
         [string]$StatusMessage = "Job",
 
         [Parameter(Mandatory = $false)]
-        [int]$TimeoutMinutes = 20
+        [int]$TimeoutMinutes = 30
     )
 
     Write-Log "Waiting for $StatusMessage to complete (timeout: $TimeoutMinutes minutes)..." -Level Info
@@ -348,7 +348,6 @@ function Write-Log {
 #>
 function Invoke-GitApplyPatch {
     [CmdletBinding()]
-    [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)]
         [string]$PatchContent,
@@ -374,16 +373,14 @@ function Invoke-GitApplyPatch {
         }
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "Failed to apply patch: $applyResult" -Level Error
-            return $false
+            throw "Failed to apply patch: $applyResult"
         }
 
         Write-Log "Patch applied successfully" -Level Success
-        return $true
     }
     catch {
         Write-Log "Exception while applying patch: $($_.Exception.Message)" -Level Error
-        return $false
+        throw
     }
     finally {
         # Clean up temporary patch file
