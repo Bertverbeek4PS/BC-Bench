@@ -5,7 +5,7 @@ import json
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, TypedDict
 
 from jsonschema import ValidationError, validate
 
@@ -14,11 +14,16 @@ from utils import (
     NAV_REPO_PATH,
     extract_patches,
     find_project_paths_from_patch,
-    normalize_repo_subpath,
     strip_html,
 )
 
-__all__ = ["DatasetEntry"]
+__all__ = ["DatasetEntry", "TestEntry"]
+
+
+class TestEntry(TypedDict):
+    """Structure for test entries in FAIL_TO_PASS."""
+    codeunitID: int
+    functionName: List[str]
 
 
 @dataclass(slots=True)
@@ -35,8 +40,8 @@ class DatasetEntry:
     problem_statement: str = ""
     version: str = ""
     environment_setup_version: str = ""
-    fail_to_pass: List[str] = field(default_factory=list)
-    pass_to_pass: List[str] = field(default_factory=list)
+    fail_to_pass: List[TestEntry] = field(default_factory=list)
+    pass_to_pass: List[TestEntry] = field(default_factory=list)
     project_paths: List[str] = field(default_factory=list)
     commit: str = ""
     pr_number: Optional[int] = None
@@ -57,8 +62,8 @@ class DatasetEntry:
             problem_statement=str(payload.get("problem_statement", "")),
             version=str(payload.get("version", "")),
             environment_setup_version=str(payload.get("environment_setup_version", "")),
-            fail_to_pass=_ensure_list_of_str(payload.get("FAIL_TO_PASS", [])),
-            pass_to_pass=_ensure_list_of_str(payload.get("PASS_TO_PASS", [])),
+            fail_to_pass=_parse_test_entries(payload.get("FAIL_TO_PASS", [])),
+            pass_to_pass=_parse_test_entries(payload.get("PASS_TO_PASS", [])),
             project_paths=_ensure_list_of_str(payload.get("project_paths", [])),
         )
 
@@ -183,6 +188,24 @@ def _determine_environment_setup_version(commit: str) -> str:
 
 def _ensure_list_of_str(values: Iterable[Any]) -> List[str]:
     return [str(value) for value in values]
+
+
+def _parse_test_entries(values: Any) -> List[TestEntry]:
+    """Parse test entries from JSON payload."""
+    if not values:
+        return []
+
+    result: List[TestEntry] = []
+    for entry in values:
+        if isinstance(entry, dict):
+            result.append(TestEntry(
+                codeunitID=int(entry.get("codeunitID", 0)),
+                functionName=[str(fn) for fn in entry.get("functionName", [])]
+            ))
+        else:
+           raise ValueError(f"Invalid test entry format: {entry}")
+
+    return result
 
 
 def _extract_creation_date(pr_data: Dict[str, Any]) -> str:

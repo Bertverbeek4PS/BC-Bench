@@ -1,6 +1,16 @@
 # DatasetReader.psm1 - Module for reading BC-Bench dataset
 # Provides classes and functions to read and parse the bcbench_nav.jsonl dataset
 
+class TestEntry {
+    [int]$codeunitID
+    [string[]]$functionName
+
+    TestEntry([PSObject]$jsonObject) {
+        $this.codeunitID = [int]$jsonObject.codeunitID
+        $this.functionName = $jsonObject.functionName
+    }
+}
+
 class ValidationResult {
     [string]$InstanceId
     [string]$Status
@@ -25,8 +35,8 @@ class DatasetEntry {
     [string]$problem_statement
     [string]$version
     [string]$environment_setup_version
-    [string[]]$FAIL_TO_PASS
-    [string[]]$PASS_TO_PASS
+    [TestEntry[]]$FAIL_TO_PASS
+    [TestEntry[]]$PASS_TO_PASS
     [string[]]$project_paths
 
     # Constructor that takes a PSObject (from JSON)
@@ -41,8 +51,14 @@ class DatasetEntry {
         $this.problem_statement = $jsonObject.problem_statement
         $this.version = $jsonObject.version
         $this.environment_setup_version = $jsonObject.environment_setup_version
-        $this.FAIL_TO_PASS = $jsonObject.FAIL_TO_PASS
-        $this.PASS_TO_PASS = $jsonObject.PASS_TO_PASS
+        $this.FAIL_TO_PASS = @()
+        foreach ($entry in $jsonObject.FAIL_TO_PASS) {
+            $this.FAIL_TO_PASS += [TestEntry]::new($entry)
+        }
+        $this.PASS_TO_PASS = @()
+        foreach ($entry in $jsonObject.PASS_TO_PASS) {
+            $this.PASS_TO_PASS += [TestEntry]::new($entry)
+        }
         $this.project_paths = $jsonObject.project_paths
     }
 

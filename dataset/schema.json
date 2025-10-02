@@ -51,16 +51,50 @@
     },
     "FAIL_TO_PASS": {
       "type": "array",
-      "description": "A json list of strings that represent the set of tests resolved by the PR and tied to the issue resolution",
+      "description": "A json list of test entries representing the set of tests resolved by the PR and tied to the issue resolution",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "codeunitID": {
+            "type": "integer",
+            "description": "The ID of the test codeunit"
+          },
+          "functionName": {
+            "type": "array",
+            "description": "List of test function names within the codeunit",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": ["codeunitID", "functionName"],
+        "additionalProperties": false
       }
     },
     "PASS_TO_PASS": {
       "type": "array",
       "description": "A json list of strings that represent tests that should pass before and after the PR application",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "codeunitID": {
+            "type": "integer",
+            "description": "The ID of the test codeunit"
+          },
+          "functionName": {
+            "type": "array",
+            "description": "List of test function names within the codeunit",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": ["codeunitID", "functionName"],
+        "additionalProperties": false
       }
     },
     "project_paths": {
