@@ -74,7 +74,7 @@ foreach ($entry in $versionEntries) {
         foreach ($projectPath in $entry.project_paths) {
             [string]$fullProjectPath = Join-Path -Path $NAVClonePath -ChildPath $projectPath
             Update-AppProjectVersion -ProjectPath $fullProjectPath -Version $Version
-            Invoke-AppBuildAndPublish -containerName $containerName -appProjectFolder $fullProjectPath -credential $credential -skipVerification
+            Invoke-AppBuildAndPublish -containerName $containerName -appProjectFolder $fullProjectPath -credential $credential -skipVerification -useDevEndpoint
         }
         Write-Log "[Test Patch Only] Build completed successfully for $($entry.instance_id)" -Level Success
 
@@ -89,7 +89,7 @@ foreach ($entry in $versionEntries) {
         foreach ($projectPath in $entry.project_paths) {
             [string]$fullProjectPath = Join-Path -Path $NAVClonePath -ChildPath $projectPath
             Update-AppProjectVersion -ProjectPath $fullProjectPath -Version $Version
-            Invoke-AppBuildAndPublish -containerName $containerName -appProjectFolder $fullProjectPath -credential $credential -skipVerification
+            Invoke-AppBuildAndPublish -containerName $containerName -appProjectFolder $fullProjectPath -credential $credential -skipVerification -useDevEndpoint
         }
         Write-Log "[Gold Patch Applied] Build completed successfully for $($entry.instance_id)" -Level Success
 
