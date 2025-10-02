@@ -54,8 +54,6 @@ catch {
 
 [string] $containerName = Get-StandardContainerName -Version $Version
 [ValidationResult[]]$validationResults = @()
-[int]$successCount = 0
-[int]$failureCount = 0
 
 foreach ($entry in $versionEntries) {
     Write-Log "Validating entry: $($entry.instance_id)" -Level Info
@@ -100,12 +98,10 @@ foreach ($entry in $versionEntries) {
 
         Write-Log "[Gold Patch Applied] Tests passed successfully" -Level Success
         $validationResults += [ValidationResult]::new($entry.instance_id, "Passed", "All tests passed after applying patch")
-        $successCount++
     }
     catch {
         Write-Log "Exception while validating $($entry.instance_id): $($_.Exception.Message)" -Level Error
         $validationResults += [ValidationResult]::new($entry.instance_id, "Failed", $_.Exception.Message)
-        $failureCount++
     }
     finally {
         Write-Log "Cleaning up Git state for $($entry.instance_id)" -Level Debug
@@ -115,18 +111,33 @@ foreach ($entry in $versionEntries) {
     }
 }
 
-# Summary
-Write-Host "`n" -NoNewline
-Write-Log "=== Validation Summary ===" -Level Info
-Write-Log "Total entries processed: $($versionEntries.Count)" -Level Info
-Write-Log "Successful validations: $successCount" -Level Success
-Write-Log "Failed validations: $failureCount" -Level $(if ($failureCount -gt 0) { "Error" } else { "Info" })
+function Show-ValidationResults {
+    param(
+        [Parameter(Mandatory=$true)]
+        [ValidationResult[]]$Results
+    )
 
-if ($env:RUNNER_DEBUG -eq '1') {
     Write-Host "`n" -NoNewline
-    Write-Log "Detailed Results:" -Level Warning
-    $validationResults | Format-Table -Property InstanceId, Status, Message -AutoSize
+    Write-Log "=== Validation Summary ===" -Level Info
+
+    [int] $successCount = ($Results | Where-Object { $_.Status -eq "Passed" }).Count
+    [int] $failureCount = ($Results | Where-Object { $_.Status -eq "Failed" }).Count
+
+    Write-Log "Total entries processed: $($Results.Count)" -Level Info
+    Write-Log "Successful validations: $successCount" -Level Success
+    Write-Log "Failed validations: $failureCount" -Level $(if ($failureCount -gt 0) { "Error" } else { "Info" })
+
+    if ($env:RUNNER_DEBUG -eq '1') {
+        Write-Host "`n" -NoNewline
+        Write-Log "Detailed Results:" -Level Warning
+        $Results | Format-Table -Property InstanceId, Status, Message -AutoSize
+    }
+
+    return $failureCount
 }
+
+# Show results and get failure count
+[int] $failureCount = Show-ValidationResults -Results $validationResults
 
 # Exit with appropriate code
 if ($failureCount -gt 0) {
