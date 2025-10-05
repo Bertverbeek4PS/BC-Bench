@@ -132,11 +132,8 @@ Invoke-BCTest -containerName '{self.config.container_name}' -credential $credent
         logger.debug(f"Executing PowerShell command:\n{command}\nIn directory: {working_dir}")
 
         try:
-            # Execute using pwsh (PowerShell Core) or powershell
-            ps_executable = "pwsh" if self._is_pwsh_available() else "powershell"
-
             result = subprocess.run(
-                [ps_executable, "-NoProfile", "-NonInteractive", "-Command", command],
+                ["pwsh", "-NoProfile", "-NonInteractive", "-Command", command],
                 cwd=working_dir,
                 capture_output=True,
                 text=True,
@@ -163,14 +160,6 @@ Invoke-BCTest -containerName '{self.config.container_name}' -credential $credent
                 "returncode": -1,
                 "output": f"Error executing command: {str(e)}"
             }
-
-    def _is_pwsh_available(self) -> bool:
-        """Check if PowerShell Core (pwsh) is available"""
-        try:
-            subprocess.run(["pwsh", "-Version"], capture_output=True, timeout=2)
-            return True
-        except:
-            return False
 
     def get_template_vars(self) -> dict[str, Any]:
         """Get template variables for prompt rendering"""
