@@ -43,6 +43,9 @@ jobs:
       matrix:
         version: ${{ fromJson(needs.get-versions.outputs.versions) }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Install BcContainerHelper module
         run: |
           Install-Module -Name BcContainerHelper -Force -AllowClobber
@@ -57,6 +60,15 @@ jobs:
           cd scripts/powershell
           .\Setup-ContainerAndRepository.ps1 -Version "${{ matrix.version }}"
         shell: pwsh
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install bcbench package
+        run: |
+          pip install -e .
 
       - name: Get entries for version ${{ matrix.version }}
         id: get-entries
