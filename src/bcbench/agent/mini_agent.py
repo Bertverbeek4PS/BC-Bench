@@ -1,4 +1,4 @@
-"""Mini BC Agent implementation using mini-swe-agent."""
+"""mini-bc-agent implementation using mini-swe-agent."""
 
 import json
 import os
@@ -54,24 +54,16 @@ def _create_bc_agent_class():
 
         def query(self) -> dict:
             """Query the model with current messages."""
-            logger.debug(
-                f"============================ Current step: {self.model.n_calls} ============================="
-            )
+            logger.debug(f"============================ Current step: {self.model.n_calls} =============================")
             return super().query()
 
         def parse_action(self, response: dict) -> dict:
             """Parse the action from the message. Returns the action."""
-            logger.debug(
-                f"Agent response content:\n{colored(response['content'], GREY)}"
-            )
-            actions = re.findall(
-                r"```powershell\s*\n(.*?)\n```", response["content"], re.DOTALL
-            )
+            logger.debug(f"Agent response content:\n{colored(response['content'], GREY)}")
+            actions = re.findall(r"```powershell\s*\n(.*?)\n```", response["content"], re.DOTALL)
             if len(actions) == 1:
                 return {"action": actions[0].strip(), **response}
-            raise FormatError(
-                self.render_template(self.config.format_error_template, actions=actions)
-            )
+            raise FormatError(self.render_template(self.config.format_error_template, actions=actions))
 
     return BCAgent
 
@@ -111,9 +103,7 @@ def run_agent(
         if password is None:
             password = os.environ.get("BC_CONTAINER_PASSWORD")
             if password is None:
-                logger.error(
-                    "Password required when --use-container is enabled. Set --password or BC_CONTAINER_PASSWORD env var"
-                )
+                logger.error("Password required when --use-container is enabled. Set --password or BC_CONTAINER_PASSWORD env var")
                 raise typer.Exit(code=1)
 
     try:

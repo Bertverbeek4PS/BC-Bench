@@ -1,5 +1,5 @@
 name: Evaluation with Mini Agent
-description: Evaluate using mini-bcbench-agent
+description: Evaluate using mini-bc-agent
 permissions:
   contents: read
 
@@ -97,7 +97,7 @@ jobs:
         run: |
           pip install -e .
 
-      - name: Generate Patch using mini-bcbench-agent for entry ${{ matrix.entry }}
+      - name: Generate Patch using mini-bc-agent for entry ${{ matrix.entry }}
         env:
           BC_CONTAINER_PASSWORD: ${{ secrets.BC_CONTAINER_PASSWORD }}
           AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
