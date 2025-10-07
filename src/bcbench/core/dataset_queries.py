@@ -170,12 +170,10 @@ def query_entries(
         logger.error(f"No entries found for version: {version}")
         raise typer.Exit(code=1)
 
-    # Display results to user
     print(f"Found {len(entries)} entry(ies) for version {version}:")
     for entry_id in entries:
         print(f"  - {entry_id}")
 
-    # Write to GitHub Actions output if requested
     if github_output:
         _write_github_output(github_output, json.dumps(entries))
         logger.info(f"Written to GITHUB_OUTPUT as '{github_output}'")
