@@ -19,6 +19,7 @@ __all__ = ["DatasetEntry", "TestEntry"]
 
 class TestEntry(TypedDict):
     """Structure for test entries in FAIL_TO_PASS."""
+
     codeunitID: int
     functionName: List[str]
 
@@ -135,52 +136,34 @@ class DatasetEntry:
         except ValidationError as exc:  # pragma: no cover - simple passthrough
             raise ValueError(f"Dataset entry validation error: {exc.message}") from exc
 
+
 def _determine_environment_setup_version(commit: str) -> str:
     """Determine the appropriate environment setup version based on commit availability in release branches."""
-    try:
-        # Get current version from master branch Directory.App.Props.json
-        result = subprocess.run(
-            ["git", "show", "master:Directory.App.Props.json"],
-            cwd=NAV_REPO_PATH,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        props_data = json.loads(result.stdout)
-        current_version_str = props_data["variables"]["app_currentVersion"]
-        # Extract major version (e.g., "28.0.0.0" -> 28)
-        current_major_version = int(current_version_str.split('.')[0])
 
-        # Start checking from (current_version - 1)
-        start_version = current_major_version - 1
+    result = subprocess.run(["git", "show", "master:Directory.App.Props.json"], cwd=NAV_REPO_PATH, capture_output=True, text=True, check=True)
+    props_data = json.loads(result.stdout)
+    current_version_str = props_data["variables"]["app_currentVersion"]
+    # Extract major version (e.g., "28.0.0.0" -> 28)
+    current_major_version = int(current_version_str.split(".")[0])
 
-        # Check release branches backwards
-        for major_version in range(start_version, 20, -1):  # Go back to version 20
-            for minor_version in [5, 4, 3, 2, 1, 0]:
-                branch_name = f"releases/{major_version}.{minor_version}"
+    # Start checking from (current_version - 1)
+    start_version = current_major_version - 1
 
-                # Check if branch exists
-                branch_check = subprocess.run(
-                    ["git", "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{branch_name}"],
-                    cwd=NAV_REPO_PATH,
-                    capture_output=True
-                )
+    # Check release branches backwards
+    for major_version in range(start_version, 20, -1):  # Go back to version 20
+        for minor_version in [5, 4, 3, 2, 1, 0]:
+            branch_name = f"releases/{major_version}.{minor_version}"
 
-                if branch_check.returncode == 0:  # Branch exists
-                    commit_check = subprocess.run(
-                        ["git", "merge-base", "--is-ancestor", commit, f"origin/{branch_name}"],
-                        cwd=NAV_REPO_PATH,
-                        capture_output=True
-                    )
+            # Check if branch exists
+            branch_check = subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{branch_name}"], cwd=NAV_REPO_PATH, capture_output=True)
 
-                    if commit_check.returncode != 0:  # Commit doesn't exist in this branch
-                        return f"{major_version}.{minor_version}"
+            if branch_check.returncode == 0:  # Branch exists
+                commit_check = subprocess.run(["git", "merge-base", "--is-ancestor", commit, f"origin/{branch_name}"], cwd=NAV_REPO_PATH, capture_output=True)
 
-        return ""
+                if commit_check.returncode != 0:  # Commit doesn't exist in this branch
+                    return f"{major_version}.{minor_version}"
 
-    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError, ValueError) as e:
-        # Return empty string if any error occurs
-        return ""
+    return ""
 
 
 def _ensure_list_of_str(values: Iterable[Any]) -> List[str]:
@@ -195,12 +178,9 @@ def _parse_test_entries(values: Any) -> List[TestEntry]:
     result: List[TestEntry] = []
     for entry in values:
         if isinstance(entry, dict):
-            result.append(TestEntry(
-                codeunitID=int(entry.get("codeunitID", 0)),
-                functionName=[str(fn) for fn in entry.get("functionName", [])]
-            ))
+            result.append(TestEntry(codeunitID=int(entry.get("codeunitID", 0)), functionName=[str(fn) for fn in entry.get("functionName", [])]))
         else:
-           raise ValueError(f"Invalid test entry format: {entry}")
+            raise ValueError(f"Invalid test entry format: {entry}")
 
     return result
 
@@ -225,8 +205,4 @@ def _extract_problem_statement(work_item_data: Dict[str, Any]) -> str:
     repro_steps = strip_html(fields.get("Microsoft.VSTS.TCM.ReproSteps", ""))
     description = strip_html(fields.get("System.Description", ""))
 
-    return (
-        f"Title: {fields.get('System.Title', '')}\n"
-        f"Repro Steps:\n{repro_steps}\n"
-        f"Description:\n{description}\n"
-    )
+    return f"Title: {fields.get('System.Title', '')}\nRepro Steps:\n{repro_steps}\nDescription:\n{description}\n"

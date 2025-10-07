@@ -18,9 +18,9 @@ load_dotenv()
 
 # Lazy imports to avoid mini-swe-agent startup message for non-agent commands
 if TYPE_CHECKING:
-    from minisweagent.agents.default import DefaultAgent, FormatError
-    from minisweagent.models.litellm_model import LitellmModel
-    from bcbench.agent.bc_environment import BCEnvironment
+    from minisweagent.agents.default import DefaultAgent, FormatError  # noqa: F401
+    from minisweagent.models.litellm_model import LitellmModel  # noqa: F401
+    from bcbench.agent.bc_environment import BCEnvironment  # noqa: F401
 
 logger = get_logger(__name__)
 
