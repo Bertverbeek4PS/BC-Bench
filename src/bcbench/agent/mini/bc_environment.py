@@ -120,14 +120,13 @@ class BCEnvironment(LocalEnvironment):
             output_lines: list[str] = output_stripped.split("\n")
             line_count: int = len(output_lines)
 
-            # At INFO level: show return code and line count for successful commands, first 3 lines for errors
             if result.returncode == 0:
-                logger.info(f"Command succeeded ({line_count} lines of output)")
+                logger.info("Command succeeded")
             else:
-                logger.info(f"Command failed with exit code {result.returncode}")
+                logger.error(f"Command failed with exit code {result.returncode}")
                 if line_count > 0:
                     preview_lines = min(3, line_count)
-                    logger.info(f"Error output (first {preview_lines} lines):\n{'\n'.join(output_lines[:preview_lines])}")
+                    logger.error(f"Error output (first {preview_lines} lines):\n{'\n'.join(output_lines[:preview_lines])}")
 
             # At DEBUG level: show full output (truncated if too long)
             if line_count <= 10:

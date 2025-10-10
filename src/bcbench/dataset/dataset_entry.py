@@ -99,16 +99,16 @@ class DatasetEntry:
         return {
             "repo": self.repo,
             "instance_id": self.instance_id,
-            "patch": self.patch,
             "base_commit": self.base_commit,
-            "hints_text": self.hints_text,
             "created_at": self.created_at,
-            "test_patch": self.test_patch,
-            "problem_statement": self.problem_statement,
             "environment_setup_version": self.environment_setup_version,
+            "project_paths": list(self.project_paths),
+            "hints_text": self.hints_text,
             "FAIL_TO_PASS": list(self.fail_to_pass),
             "PASS_TO_PASS": list(self.pass_to_pass),
-            "project_paths": list(self.project_paths),
+            "problem_statement": self.problem_statement,
+            "test_patch": self.test_patch,
+            "patch": self.patch,
         }
 
     def save_to_file(self, filepath: Path | str, *, overwrite: bool = False) -> None:

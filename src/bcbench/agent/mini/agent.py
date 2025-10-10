@@ -40,7 +40,7 @@ def _create_bc_agent_class():
             if len(response_content) <= 200:
                 logger.info(f"Agent response:\n{response_content}")
             else:
-                logger.info(f"Agent response ({len(response_content)} chars):\n{response_content[:197]}...")
+                logger.info(f"Agent response (truncated from {len(response_content)} chars for readability):\n{response_content[:197]}...")
 
             logger.debug(f"Full agent response:\n{response_content}")
 
