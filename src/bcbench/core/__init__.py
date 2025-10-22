@@ -10,6 +10,7 @@ from bcbench.core.bc_operations import (
     build_and_publish_projects,
     run_tests,
 )
+from bcbench.core.logger import get_logger
 
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "apply_patch",
     "build_and_publish_projects",
     "run_tests",
+    "get_logger",
 ]

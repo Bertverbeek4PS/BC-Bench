@@ -5,12 +5,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, TypedDict
-from bcbench.core.utils import (
-    NAV_REPO_PATH,
-    extract_patches,
-    find_project_paths_from_patch,
-    strip_html,
-)
+from bcbench.core import NAV_REPO_PATH, extract_patches, find_project_paths_from_patch, strip_html, get_logger
 
 __all__ = ["DatasetEntry"]
 
@@ -188,9 +183,10 @@ def _extract_hints(pr_data: Dict[str, Any], work_item_data: Dict[str, Any]) -> s
 
 
 def _extract_problem_statement(work_item_data: Dict[str, Any]) -> str:
+    logger = get_logger(__name__)
     fields = work_item_data.get("fields", {})
     if fields.get("System.CommentCount", 0) > 0:
-        raise ValueError("Work item has comments, additional handling required.")
+        logger.warning("Work item has comments, additional handling may be required.")
 
     repro_steps = strip_html(fields.get("Microsoft.VSTS.TCM.ReproSteps", ""))
     description = strip_html(fields.get("System.Description", ""))
