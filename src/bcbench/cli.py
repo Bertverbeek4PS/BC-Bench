@@ -47,11 +47,14 @@ def collect_nav(
     pr_number: Annotated[int, typer.Argument(help="Pull request number to collect")],
     output: Annotated[Path, typer.Option(help="Output file path")] = DATASET_PATH,
     overwrite: Annotated[bool, typer.Option(help="Overwrite output file instead of appending")] = False,
+    diff_path: Annotated[str, typer.Option(help="Filter git diff to only show changes under this path")] = "",
 ):
     """
     Collect dataset entry from Azure DevOps NAV pull request.
 
-    Try it out with: bcbench collect nav 210528 --output dataset/bcbench_nav.jsonl --overwrite
+    Try it out with: bcbench collect nav 210528 --output dataset/bcbench_nav.jsonl
+
+    For BaseApp Data, use diff_path: .\\App\\Layers\\W1\\:
     """
     from bcbench.collection.collect_nav import collect_nav_entry
 
@@ -59,6 +62,7 @@ def collect_nav(
         pr_number=pr_number,
         output=output,
         overwrite=overwrite,
+        diff_path=diff_path,
     )
 
 
