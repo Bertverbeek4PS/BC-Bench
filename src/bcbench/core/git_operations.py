@@ -57,7 +57,7 @@ def apply_patch(repo_path: Path, patch_content: str, patch_name: str = "patch") 
 
     try:
         result = subprocess.run(
-            ["git", "apply", patch_file],
+            ["git", "apply", "--whitespace=nowarn", patch_file],
             cwd=repo_path,
             capture_output=True,
             text=True,
