@@ -44,9 +44,23 @@ def validate_entries(dataset_path: Path, schema_path: Path) -> list[ValidationRe
             results.append(ValidationResult(line_number=line_num, instance_id=entry.instance_id, success=True))
         except ValueError as e:
             error_msg = f"Line {line_num}: Validation error - {e!s}"
-            results.append(ValidationResult(line_number=line_num, instance_id=entry.instance_id, success=False, error_message=error_msg))
+            results.append(
+                ValidationResult(
+                    line_number=line_num,
+                    instance_id=entry.instance_id,
+                    success=False,
+                    error_message=error_msg,
+                )
+            )
         except Exception as e:
             error_msg = f"Line {line_num}: Unexpected error - {e!s}"
-            results.append(ValidationResult(line_number=line_num, instance_id=entry.instance_id, success=False, error_message=error_msg))
+            results.append(
+                ValidationResult(
+                    line_number=line_num,
+                    instance_id=entry.instance_id,
+                    success=False,
+                    error_message=error_msg,
+                )
+            )
 
     return results

@@ -24,7 +24,6 @@ class BCEnvironmentConfig(LocalEnvironmentConfig):
     project_paths: list[str] = field(default_factory=list)
     enable_bc_tools: bool = True  # Flag to show/hide BC-specific tools from agent
     version: str = ""
-    timeout: int = 120  # build and test commands can take longer, default to 120 seconds
 
 
 class BCEnvironment(LocalEnvironment):
@@ -40,22 +39,28 @@ class BCEnvironment(LocalEnvironment):
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         command = command.strip()
 
-        if command.startswith("bc_build "):
-            return self._bc_build(command, cwd, timeout)
+        if command.startswith("bc_build_and_publish "):
+            return self._bc_build_and_publish(command, cwd, timeout)
         if command.startswith("bc_test "):
             return self._bc_test(command, cwd, timeout)
         return self._execute_powershell(command, cwd, timeout)
 
-    def _bc_build(self, command: str, cwd: str, timeout: int | None) -> dict[str, Any]:
+    def _bc_build_and_publish(self, command: str, cwd: str, timeout: int | None) -> dict[str, Any]:
         parts = command.split(maxsplit=1)
         if len(parts) < 2:
-            return {"returncode": 1, "output": "Error: bc_build requires a project path. Usage: bc_build <project_path>"}
+            return {
+                "returncode": 1,
+                "output": "Error: bc_build_and_publish requires a project path. Usage: bc_build_and_publish <project_path>",
+            }
 
         project_path = parts[1].strip()
         logger.info(f"Building project: {project_path}")
 
         if self.config.project_paths and (project_path not in self.config.project_paths):
-            return {"returncode": 1, "output": f"Error: Project path '{project_path}' is not in the allowed project_paths list: {self.config.project_paths}"}
+            return {
+                "returncode": 1,
+                "output": f"Error: Project path '{project_path}' is not in the allowed project_paths list: {self.config.project_paths}",
+            }
 
         full_project_path: Path = Path(self.config.repo_path) / project_path
 
@@ -67,17 +72,26 @@ class BCEnvironment(LocalEnvironment):
             version=self.config.version,
         )
 
+        # Extend timeout for build and publish, especially for BaseApp
+        timeout = 15 * 60 if ("BaseApp" in project_path) else 5 * 60
+
         return self._execute_powershell(ps_script, cwd or self.config.cwd, timeout, log_command=False)
 
     def _bc_test(self, command: str, cwd: str, timeout: int | None) -> dict[str, Any]:
         parts = command.split(maxsplit=2)
         if len(parts) < 2:
-            return {"returncode": 1, "output": "Error: bc_test requires a codeunit ID. Usage: bc_test <codeunit_id> [function1,function2,...]"}
+            return {
+                "returncode": 1,
+                "output": "Error: bc_test requires a codeunit ID. Usage: bc_test <codeunit_id> [function1,function2,...]",
+            }
 
         try:
             codeunit_id: int = int(parts[1])
         except ValueError:
-            return {"returncode": 1, "output": f"Error: Invalid codeunit ID '{parts[1]}'. Must be an integer."}
+            return {
+                "returncode": 1,
+                "output": f"Error: Invalid codeunit ID '{parts[1]}'. Must be an integer.",
+            }
 
         function_names: list[str] = []
         if len(parts) > 2:
@@ -95,6 +109,8 @@ class BCEnvironment(LocalEnvironment):
             codeunit_id=codeunit_id,
             function_names=function_names if function_names else None,
         )
+
+        timeout = 2 * 60
 
         return self._execute_powershell(ps_script, cwd or self.config.cwd, timeout, log_command=False)
 
@@ -114,7 +130,12 @@ class BCEnvironment(LocalEnvironment):
 
         try:
             result = subprocess.run(
-                ["pwsh", "-NoProfile", "-NonInteractive", "-Command", command], cwd=working_dir, capture_output=True, text=True, timeout=timeout, env={**os.environ, **self.config.env}
+                ["pwsh", "-NoProfile", "-NonInteractive", "-Command", command],
+                cwd=working_dir,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env={**os.environ, **self.config.env},
             )
 
             output = result.stdout
@@ -142,9 +163,18 @@ class BCEnvironment(LocalEnvironment):
             return {"returncode": result.returncode, "output": output_stripped}
 
         except subprocess.TimeoutExpired as e:
-            return {"returncode": -1, "output": f"Command timed out after {timeout} seconds\n{e.stdout or ''}"}
+            error_msg = f"Command timed out after {timeout} seconds"
+            logger.error(error_msg)
+            if e.stdout:
+                logger.debug(f"Partial output before timeout:\n{e.stdout}")
+            return {
+                "returncode": -1,
+                "output": f"{error_msg}\n{e.stdout or ''}",
+            }
         except Exception as e:
-            return {"returncode": -1, "output": f"Error executing command: {e!s}"}
+            error_msg = f"Error executing command: {e!s}"
+            logger.error(error_msg)
+            return {"returncode": -1, "output": error_msg}
 
     def get_template_vars(self) -> dict[str, Any]:
         """Get template variables for prompt rendering"""

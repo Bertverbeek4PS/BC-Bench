@@ -37,7 +37,13 @@ def validate_dataset(
 @dataset_app.command("versions")
 def list_versions(
     dataset_path: Annotated[Path, typer.Option(help="Path to dataset file")] = DATASET_PATH,
-    github_output: Annotated[str | None, typer.Option("--github-output", help="Write JSON output to GITHUB_OUTPUT with this key name")] = None,
+    github_output: Annotated[
+        str | None,
+        typer.Option(
+            "--github-output",
+            help="Write JSON output to GITHUB_OUTPUT with this key name",
+        ),
+    ] = None,
 ):
     """Get unique environment_setup_version values from the dataset."""
     entries = load_dataset_entries(dataset_path)
@@ -54,15 +60,36 @@ def list_versions(
 @dataset_app.command("list")
 def list_entries(
     dataset_path: Annotated[Path, typer.Option(help="Path to dataset file")] = DATASET_PATH,
-    github_output: Annotated[str | None, typer.Option("--github-output", help="Write JSON output to GITHUB_OUTPUT with this key name")] = None,
-    modified_only: Annotated[bool, typer.Option("--modified-only", help="Only list entries that have been modified in git diff")] = False,
+    github_output: Annotated[
+        str | None,
+        typer.Option(
+            "--github-output",
+            help="Write JSON output to GITHUB_OUTPUT with this key name",
+        ),
+    ] = None,
+    modified_only: Annotated[
+        bool,
+        typer.Option(
+            "--modified-only",
+            help="Only list entries that have been modified in git diff",
+        ),
+    ] = False,
 ):
     """List dataset entry IDs."""
     if modified_only:
         import subprocess
 
         result = subprocess.run(
-            ["git", "diff", "origin/main", "--unified=0", "--no-color", "--diff-filter=AM", "--", str(dataset_path)],
+            [
+                "git",
+                "diff",
+                "origin/main",
+                "--unified=0",
+                "--no-color",
+                "--diff-filter=AM",
+                "--",
+                str(dataset_path),
+            ],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -106,7 +133,10 @@ def view_entry(
     info_table.add_row("Base Commit", entry.base_commit or "N/A")
     info_table.add_row("Created At", entry.created_at or "N/A")
     info_table.add_row("Environment Setup Version", entry.environment_setup_version or "N/A")
-    info_table.add_row("Project Paths", "\n".join(entry.project_paths) if entry.project_paths else "N/A")
+    info_table.add_row(
+        "Project Paths",
+        "\n".join(entry.project_paths) if entry.project_paths else "N/A",
+    )
 
     console.print(Panel(info_table, title="[bold]Entry Information[/bold]", border_style="blue"))
 
@@ -128,7 +158,10 @@ def view_entry(
         test_table.add_column("Codeunit ID", style="magenta")
         test_table.add_column("Functions", style="yellow")
         for test in entry.fail_to_pass:
-            test_table.add_row(str(test.get("codeunitID", "N/A")), ", ".join(test.get("functionName", [])))
+            test_table.add_row(
+                str(test.get("codeunitID", "N/A")),
+                ", ".join(test.get("functionName", [])),
+            )
         console.print(test_table)
     else:
         console.print("[dim]No FAIL_TO_PASS tests[/dim]")
@@ -139,7 +172,10 @@ def view_entry(
         test_table.add_column("Codeunit ID", style="magenta")
         test_table.add_column("Functions", style="yellow")
         for test in entry.pass_to_pass:
-            test_table.add_row(str(test.get("codeunitID", "N/A")), ", ".join(test.get("functionName", [])))
+            test_table.add_row(
+                str(test.get("codeunitID", "N/A")),
+                ", ".join(test.get("functionName", [])),
+            )
         console.print(test_table)
     else:
         console.print("[dim]No PASS_TO_PASS tests[/dim]")
