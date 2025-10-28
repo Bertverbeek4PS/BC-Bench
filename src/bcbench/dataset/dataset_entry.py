@@ -221,7 +221,12 @@ def _extract_problem_statement(work_item_data: dict[str, Any]) -> str:
     if fields.get("System.CommentCount", 0) > 0:
         logger.warning("Work item has comments, additional handling may be required.")
 
-    repro_steps = strip_html(fields.get("Microsoft.VSTS.TCM.ReproSteps", ""))
-    description = strip_html(fields.get("System.Description", ""))
+    repro_steps_raw = fields.get("Microsoft.VSTS.TCM.ReproSteps", "")
+    logger.debug("Raw repro steps:\n %s", repro_steps_raw)
+    repro_steps = strip_html(repro_steps_raw)
+
+    description_raw = fields.get("System.Description", "")
+    logger.debug("Raw description:\n %s", description_raw)
+    description = strip_html(description_raw)
 
     return f"Title: {fields.get('System.Title', '')}\nRepro Steps:\n{repro_steps}\nDescription:\n{description}\n"
