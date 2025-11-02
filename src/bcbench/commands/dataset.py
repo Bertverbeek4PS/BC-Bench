@@ -11,7 +11,6 @@ from bcbench.dataset import DatasetEntry
 from bcbench.dataset.dataset_loader import load_dataset_entries
 from bcbench.dataset.validate_schema import ValidationResult, validate_entries
 from bcbench.logger import get_logger
-from bcbench.utils import write_github_output
 
 logger = get_logger(__name__)
 _config = get_config()
@@ -56,7 +55,7 @@ def list_versions(
         print(f"  - {version}")
 
     if github_output:
-        write_github_output(github_output, json.dumps(versions))
+        _write_github_output(github_output, json.dumps(versions))
 
 
 @dataset_app.command("list")
@@ -109,7 +108,7 @@ def list_entries(
         print(f"  - {entry_id}")
 
     if github_output:
-        write_github_output(github_output, json.dumps(entry_ids))
+        _write_github_output(github_output, json.dumps(entry_ids))
 
 
 @dataset_app.command("view")
@@ -197,3 +196,12 @@ def _modified_instance_ids_from_diff(diff_output: str) -> list[str]:
             instance_ids.append(entry_data["instance_id"])
 
     return instance_ids
+
+
+def _write_github_output(key: str, value: str) -> None:
+    """Write a value to GitHub Actions output."""
+    config = get_config()
+    if not config.env.github_output:
+        raise ValueError("GITHUB_OUTPUT environment variable not set")
+    with open(config.env.github_output, "a", encoding="utf-8") as f:
+        f.write(f"{key}={value}\n")
