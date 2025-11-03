@@ -6,6 +6,7 @@ from typing import Any
 import requests
 import typer
 
+from bcbench.exceptions import CollectionError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,11 +29,11 @@ class ADOClient:
     def get_work_item_info(self, pr_data: dict[str, Any]) -> dict[str, Any]:
         work_items = pr_data.get("_links", {}).get("workItems")
         if not work_items or len(work_items) != 1:
-            raise ValueError("PR should be linked to exactly one work item.")
+            raise CollectionError("PR should be linked to exactly one work item.")
 
         work_item_url = work_items[0]["href"] if isinstance(work_items, list) else work_items.get("href", "")
         if not work_item_url:
-            raise ValueError("Unable to determine work item URL from PR data.")
+            raise CollectionError("Unable to determine work item URL from PR data.")
 
         response = requests.get(work_item_url, headers=self._get_headers())
         response.raise_for_status()
@@ -51,14 +52,14 @@ class ADOClient:
 
             choice: int = typer.prompt("Enter the number of the work item to use", type=int)
             if choice < 1 or choice > len(work_item_ref["value"]):
-                raise ValueError("Invalid selection.")
+                raise CollectionError("Invalid selection.")
 
             work_item_url = work_item_ref["value"][choice - 1]["url"]
             response = requests.get(work_item_url, headers=self._get_headers())
             response.raise_for_status()
             return response.json()
 
-        raise ValueError("No work items found in the reference.")
+        raise CollectionError("No work items found in the reference.")
 
     def _make_request(self, endpoint: str) -> dict[str, Any]:
         url = f"{BASE_URL}/{endpoint}"

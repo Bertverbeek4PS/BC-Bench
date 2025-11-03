@@ -5,6 +5,7 @@ from pathlib import Path
 
 from unidiff import PatchSet
 
+from bcbench.exceptions import CollectionError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,7 +35,7 @@ def extract_patches(repo_path: Path, base_commit_id: str, commit_id: str, diff_p
     patch = result.stdout
 
     if not patch:
-        raise ValueError("No patch data found between the specified commits.")
+        raise CollectionError("No patch data found between the specified commits")
 
     patch_test: str = ""
     patch_fix: str = ""
@@ -50,12 +51,12 @@ def extract_patches(repo_path: Path, base_commit_id: str, commit_id: str, diff_p
 def find_project_paths_from_patch(repo_path: Path, patch: str) -> list[str]:
     """Find project paths (directories containing app.json) from a patch."""
     if not patch or not str(patch).strip():
-        raise ValueError("Patch data is empty or None.")
+        raise CollectionError("Patch data is empty or None")
 
     try:
         patch_set = PatchSet(str(patch))
     except Exception:
-        raise ValueError("Failed to parse patch data.") from None
+        raise CollectionError("Failed to parse patch data") from None
 
     project_paths: set[str] = set()
 

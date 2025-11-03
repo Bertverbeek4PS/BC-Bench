@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Callable
 
 from bcbench.dataset.dataset_entry import DatasetEntry
+from bcbench.exceptions import EntryNotFoundError, NoEntriesFoundError
 
 __all__ = ["load_dataset_entries"]
 
@@ -78,14 +79,12 @@ def load_dataset_entries(
                 # Re-raise with line context
                 raise ValueError(f"Error processing line {line_num}: {e}") from e
 
-    # Check if specific entry was requested but not found
     if entry_id:
-        raise ValueError(f"Entry with instance_id '{entry_id}' not found in dataset")
+        raise EntryNotFoundError(entry_id)
 
-    # If we have filters and no results, raise an error
     if (version or filter_fn) and not entries:
         if version:
-            raise ValueError(f"No entries found for version '{version}'")
-        raise ValueError("No entries matched the filter criteria")
+            raise NoEntriesFoundError(f"version '{version}'")
+        raise NoEntriesFoundError()
 
     return entries

@@ -10,6 +10,7 @@ from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
 from bcbench.dataset.dataset_loader import load_dataset_entries
 from bcbench.dataset.validate_schema import ValidationResult, validate_entries
+from bcbench.exceptions import ConfigurationError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -202,6 +203,6 @@ def _write_github_output(key: str, value: str) -> None:
     """Write a value to GitHub Actions output."""
     config = get_config()
     if not config.env.github_output:
-        raise ValueError("GITHUB_OUTPUT environment variable not set")
+        raise ConfigurationError("GITHUB_OUTPUT environment variable not set. This feature is only available when running in GitHub Actions.")
     with open(config.env.github_output, "a", encoding="utf-8") as f:
         f.write(f"{key}={value}\n")

@@ -4,6 +4,7 @@ import re
 from html import unescape
 from typing import Any
 
+from bcbench.exceptions import CollectionError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -14,7 +15,7 @@ def extract_creation_date(pr_data: dict[str, Any]) -> str:
     creation_date = pr_data.get("creationDate", "")
     if creation_date:
         return creation_date[:10]
-    raise ValueError("Creation date not found in PR data.")
+    raise CollectionError("Creation date not found in PR data.")
 
 
 def extract_problem_statement(work_item_data: dict[str, Any]) -> str:

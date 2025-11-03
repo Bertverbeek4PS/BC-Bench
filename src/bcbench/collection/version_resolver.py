@@ -13,13 +13,18 @@ def determine_environment_setup_version(commit: str) -> str:
     """Determine the appropriate environment setup version based on commit availability in release branches."""
     config = get_config()
 
-    result = subprocess.run(
-        ["git", "show", "master:Directory.App.Props.json"],
-        cwd=config.paths.nav_repo_path,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "show", "master:Directory.App.Props.json"],
+            cwd=config.paths.nav_repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to retrieve Directory.App.Props.json: {e.stderr}")
+        raise
+
     props_data = json.loads(result.stdout)
     current_version_str = props_data["variables"]["app_currentVersion"]
     current_major_version = int(current_version_str.split(".")[0])
@@ -30,20 +35,24 @@ def determine_environment_setup_version(commit: str) -> str:
         for minor_version in [5, 4, 3, 2, 1, 0]:
             branch_name = f"releases/{major_version}.{minor_version}"
 
-            branch_check = subprocess.run(
-                [
-                    "git",
-                    "show-ref",
-                    "--verify",
-                    "--quiet",
-                    f"refs/remotes/origin/{branch_name}",
-                ],
-                cwd=config.paths.nav_repo_path,
-                capture_output=True,
-            )
+            try:
+                subprocess.run(
+                    [
+                        "git",
+                        "show-ref",
+                        "--verify",
+                        f"refs/remotes/origin/{branch_name}",
+                    ],
+                    cwd=config.paths.nav_repo_path,
+                    capture_output=True,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                logger.debug(f"Failed to check branch existence for {branch_name}: {e.stderr}")
+                continue
 
-            if branch_check.returncode == 0:
-                commit_check = subprocess.run(
+            try:
+                subprocess.run(
                     [
                         "git",
                         "merge-base",
@@ -53,9 +62,13 @@ def determine_environment_setup_version(commit: str) -> str:
                     ],
                     cwd=config.paths.nav_repo_path,
                     capture_output=True,
+                    check=True,
                 )
+            except subprocess.CalledProcessError as e:
+                logger.debug(f"Commit {commit} is not in branch {branch_name}: {e.stderr}")
+                continue
 
-                if commit_check.returncode != 0:
-                    return f"{major_version}.{minor_version}"
+            return f"{major_version}.{minor_version}"
 
+    logger.warning(f"Could not determine environment setup version for commit {commit}")
     return ""

@@ -8,6 +8,7 @@ import yaml
 
 from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
+from bcbench.exceptions import ConfigurationError
 from bcbench.logger import get_logger
 
 # Lazy imports to avoid mini-swe-agent startup message for non-agent commands
@@ -61,7 +62,7 @@ def run_mini_agent(
     """Run mini-bc-agent on a single dataset entry."""
     if enable_bc_tools:
         if not container_name:
-            raise ValueError("container_name is required when enable_bc_tools is True")
+            raise ConfigurationError("container_name is required when enable_bc_tools is True")
 
         config = get_config()
         password = config.resolve_password(password)

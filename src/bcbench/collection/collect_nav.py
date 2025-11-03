@@ -7,6 +7,7 @@ from bcbench.collection.ado_client import ADOClient
 from bcbench.collection.build_entry import build_dataset_entry_from_ado
 from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
+from bcbench.exceptions import CollectionError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,7 +33,7 @@ def collect_nav_entry(
         commit_data: dict[str, Any] = ado_client.get_commit_info(commit_id)
         parents: list[str] = commit_data.get("parents", [])
         if len(parents) != 1:
-            raise ValueError("Commit has multiple parents, cannot determine base commit.")
+            raise CollectionError("Commit has multiple parents, cannot determine base commit.")
 
         entry: DatasetEntry = build_dataset_entry_from_ado(
             pr_number=pr_number,

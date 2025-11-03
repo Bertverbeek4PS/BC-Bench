@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from bcbench.exceptions import PatchApplicationError
 from bcbench.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,13 +39,17 @@ def clean_repo(repo_path: Path) -> None:
 
 def checkout_commit(repo_path: Path, commit: str) -> None:
     logger.info(f"Checking out commit: {commit}")
-    subprocess.run(
-        ["git", "checkout", commit],
-        cwd=repo_path,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        subprocess.run(
+            ["git", "checkout", commit],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to checkout commit {commit}: {e.stderr}")
+        raise
     logger.info(f"Commit {commit} checked out")
 
 
@@ -56,16 +61,17 @@ def apply_patch(repo_path: Path, patch_content: str, patch_name: str = "patch") 
         patch_file = f.name
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["git", "apply", "--whitespace=nowarn", patch_file],
             cwd=repo_path,
             capture_output=True,
+            check=True,
             text=True,
         )
 
-        if result.returncode != 0:
-            logger.error(f"{patch_name.capitalize()} application failed: {result.stderr}")
-            raise ValueError(f"Failed to apply {patch_name}")
         logger.info(f"{patch_name.capitalize()} applied successfully")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"{patch_name.capitalize()} application failed: {e.stderr}")
+        raise PatchApplicationError(patch_name, e.stderr) from e
     finally:
         Path(patch_file).unlink(missing_ok=True)

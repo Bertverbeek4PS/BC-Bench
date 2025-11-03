@@ -7,6 +7,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from bcbench.exceptions import ConfigurationError
+
 __all__ = ["Config", "get_config"]
 
 
@@ -95,12 +97,12 @@ class Config:
     def resolve_password(self, password: str | None = None) -> str:
         resolved = password or self.env.bc_container_password
         if not resolved:
-            raise ValueError("Password required. Provide --password or set BC_CONTAINER_PASSWORD env var")
+            raise ConfigurationError("Password required. Provide --password or set BC_CONTAINER_PASSWORD env var")
         return resolved
 
     def resolve_ado_token(self) -> str:
         if not self.env.ado_token:
-            raise ValueError("ADO_TOKEN environment variable is required")
+            raise ConfigurationError("ADO_TOKEN environment variable is required")
         return self.env.ado_token
 
 

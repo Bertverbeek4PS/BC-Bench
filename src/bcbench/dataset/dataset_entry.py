@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, TypedDict
 
+from bcbench.exceptions import InvalidEntryFormatError
+
 __all__ = ["DatasetEntry"]
 
 
@@ -37,9 +39,10 @@ class DatasetEntry:
     @classmethod
     def from_json(cls, payload: dict[str, Any]) -> DatasetEntry:
         """Build an entry from a JSON payload stored in the dataset file."""
+        instance_id = str(payload.get("instance_id", ""))
         return cls(
             repo=str(payload.get("repo", "microsoftInternal/NAV")),
-            instance_id=str(payload.get("instance_id", "")),
+            instance_id=instance_id,
             patch=str(payload.get("patch", "")),
             base_commit=str(payload.get("base_commit", "")),
             hints_text=str(payload.get("hints_text", "")),
@@ -47,8 +50,8 @@ class DatasetEntry:
             test_patch=str(payload.get("test_patch", "")),
             problem_statement=str(payload.get("problem_statement", "")),
             environment_setup_version=str(payload.get("environment_setup_version", "")),
-            fail_to_pass=_parse_test_entries(payload.get("FAIL_TO_PASS", [])),
-            pass_to_pass=_parse_test_entries(payload.get("PASS_TO_PASS", [])),
+            fail_to_pass=_parse_test_entries(instance_id, payload.get("FAIL_TO_PASS", [])),
+            pass_to_pass=_parse_test_entries(instance_id, payload.get("PASS_TO_PASS", [])),
             project_paths=_ensure_list_of_str(payload.get("project_paths", [])),
         )
 
@@ -89,21 +92,21 @@ def _ensure_list_of_str(values: Iterable[Any]) -> list[str]:
     return [str(value) for value in values]
 
 
-def _parse_test_entries(values: Any) -> list[TestEntry]:
+def _parse_test_entries(instance_id: str, values: Any) -> list[TestEntry]:
     """Parse test entries from JSON payload."""
     if not values:
         return []
 
     result: list[TestEntry] = []
-    for entry in values:
-        if isinstance(entry, dict):
+    for test_entry in values:
+        try:
             result.append(
                 TestEntry(
-                    codeunitID=int(entry.get("codeunitID", 0)),
-                    functionName=[str(fn) for fn in entry.get("functionName", [])],
+                    codeunitID=int(test_entry.get("codeunitID")),
+                    functionName=[str(fn) for fn in test_entry.get("functionName")],
                 )
             )
-        else:
-            raise ValueError(f"Invalid test entry format: {entry}")
+        except Exception as e:
+            raise InvalidEntryFormatError(instance_id, f"Expected dict with codeunitID and functionName: {e}") from None
 
     return result
