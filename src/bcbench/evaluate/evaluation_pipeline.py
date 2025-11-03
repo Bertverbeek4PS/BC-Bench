@@ -2,7 +2,8 @@
 
 from collections.abc import Callable
 
-from bcbench.evaluate import EvaluationContext, EvaluationResult
+from bcbench.evaluate.evaluation_context import EvaluationContext
+from bcbench.evaluate.evaluation_result import EvaluationResult
 from bcbench.exceptions import BuildError, PatchApplicationError, TestExecutionError
 from bcbench.logger import get_logger, github_log_group
 from bcbench.operations.bc_operations import build_and_publish_projects, run_tests
