@@ -12,11 +12,17 @@ A benchmark for evaluating AI coding on Business Central (AL) development tasks,
 
 ## Quick start
 
+### Local Development
+
 ```bash
 git clone https://github.com/microsoft/BC-Bench.git
 cd BC-Bench
-pip install -e ".[dev]"
-python -m bcbench --help
+
+# Install uv if you don't have it: https://docs.astral.sh/uv/
+
+# Install dependencies and bcbench
+uv sync
+uv run bcbench --help
 ```
 
 ### Environment Setup
