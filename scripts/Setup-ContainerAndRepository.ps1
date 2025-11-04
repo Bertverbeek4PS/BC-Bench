@@ -16,10 +16,10 @@ param(
     [string]$Country = "w1",
 
     [Parameter(Mandatory=$false)]
-    [string]$ContainerName = $env::BC_CONTAINER_NAME ?? "bcbench",
+    [string]$ContainerName = $env:BC_CONTAINER_NAME ?? "bcbench",
 
     [Parameter(Mandatory=$false)]
-    [string]$Username= $env::BC_CONTAINER_USERNAME ?? "admin",
+    [string]$Username= $env:BC_CONTAINER_USERNAME ?? "admin",
 
     [Parameter(Mandatory=$false)]
     [SecureString]$Password,
