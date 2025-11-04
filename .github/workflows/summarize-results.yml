@@ -11,7 +11,7 @@ on:
 
 jobs:
   summarize-results:
-    name: Results Summary
+    name: Results
     runs-on: windows-latest
     steps:
       - name: Checkout repository
