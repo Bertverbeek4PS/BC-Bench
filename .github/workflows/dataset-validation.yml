@@ -13,7 +13,7 @@ on:
 
 jobs:
   validate-schema-and-list-entries:
-    uses: ./.github/workflows/reusable/get-entries.yml
+    uses: ./.github/workflows/get-entries.yml
     with:
       modified-only: ${{ github.event_name == 'pull_request' }}
       validate-schema: true

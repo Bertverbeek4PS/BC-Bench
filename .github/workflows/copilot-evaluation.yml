@@ -11,7 +11,7 @@ env:
 
 jobs:
   get-entries:
-    uses: ./.github/workflows/reusable/get-entries.yml
+    uses: ./.github/workflows/get-entries.yml
 
   evaluate-with-copilot-cli:
     runs-on: windows-latest
@@ -68,7 +68,7 @@ jobs:
   summarize-results:
     needs: evaluate-with-copilot-cli
     if: always()
-    uses: ./.github/workflows/reusable/summarize-results.yml
+    uses: ./.github/workflows/summarize-results.yml
     with:
       run-id: ${{ github.run_id }}
       results-dir: evaluation_results
