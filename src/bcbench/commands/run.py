@@ -12,7 +12,7 @@ from bcbench.cli_options import (
     ContainerPassword,
     ContainerUsername,
     DatasetPath,
-    OptionalOutputDir,
+    OutputDir,
     RepoPath,
 )
 from bcbench.config import get_config
@@ -40,7 +40,7 @@ def run_mini(
     ] = False,
     step_limit: Annotated[int, typer.Option(help="Maximum number of agent steps")] = 20,
     cost_limit: Annotated[float, typer.Option(help="Maximum cost limit for agent")] = 1.0,
-    output_dir: OptionalOutputDir = None,
+    output_dir: OutputDir = _config.paths.evaluation_results_path,
 ):
     """
     Run mini-bc-agent on a single entry to generate a patch (without building/testing).
@@ -73,7 +73,7 @@ def run_copilot(
     entry_id: Annotated[str, typer.Argument(help="Entry ID to run")],
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.nav_repo_path,
-    output_dir: OptionalOutputDir = None,
+    output_dir: OutputDir = _config.paths.evaluation_results_path,
 ):
     """
     Run GitHub Copilot CLI on a single entry to generate a patch (without building/testing).

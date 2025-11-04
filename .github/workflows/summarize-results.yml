@@ -4,10 +4,6 @@ description: Reusable workflow to download and summarize evaluation results
 on:
   workflow_call:
     inputs:
-      run-id:
-        description: GitHub run ID for the evaluation
-        required: true
-        type: string
       results-dir:
         description: Directory to download results to
         required: true
@@ -27,10 +23,10 @@ jobs:
       - name: Download all evaluation results
         uses: actions/download-artifact@v4
         with:
-          path: "${{ inputs.results-dir }}/"
+          path: ${{ inputs.results-dir }}/
           merge-multiple: true
 
       - name: Summarize evaluation results
         run: |
-          uv run bcbench evaluate summarize ${{ inputs.run-id }} --results-dir "${{ inputs.results-dir }}"
+          uv run bcbench evaluate summarize --result-dir "${{ inputs.results-dir }}"
         shell: pwsh

@@ -14,6 +14,7 @@ from bcbench.cli_options import (
     DatasetPath,
     OutputDir,
     RepoPath,
+    RunId,
 )
 from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry, load_dataset_entries
@@ -34,10 +35,10 @@ def evaluate_mini(
     password: ContainerPassword,
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.nav_repo_path,
+    output_dir: OutputDir = _config.paths.evaluation_results_path,
+    run_id: RunId = "mini_test_run",
     step_limit: Annotated[int, typer.Option(help="Maximum number of agent steps")] = 20,
     cost_limit: Annotated[float, typer.Option(help="Maximum cost limit for agent")] = 1.0,
-    output_dir: OutputDir = Path("evaluation_results"),
-    run_id: Annotated[str, typer.Option(help="Unique identifier for this evaluation run")] = "mini_test_run",
     enable_bc_tools: Annotated[
         bool,
         typer.Option(help="Whether to enable BC tools for the agent (build and test)"),
@@ -111,8 +112,8 @@ def evaluate_copilot(
     password: ContainerPassword,
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.nav_repo_path,
-    output_dir: OutputDir = Path("evaluation_results"),
-    run_id: Annotated[str, typer.Option(help="Unique identifier for this evaluation run")] = "copilot_test_run",
+    output_dir: OutputDir = _config.paths.evaluation_results_path,
+    run_id: RunId = "copilot_test_run",
     include_project_paths: Annotated[
         bool,
         typer.Option(help="Whether to include project paths in the prompt"),
@@ -165,8 +166,8 @@ def evaluate_copilot(
 
 @evaluate_app.command("summarize")
 def evaluate_summarize(
-    run_id: Annotated[str, typer.Argument(help="Unique identifier for the evaluation run to summarize")],
-    result_dir: OutputDir = Path("evaluation_results"),
+    run_id: RunId,
+    result_dir: OutputDir = _config.paths.evaluation_results_path,
     result_pattern: Annotated[str, typer.Option(help="Pattern for the result files")] = "*.jsonl",
 ):
     """

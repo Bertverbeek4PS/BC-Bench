@@ -22,6 +22,8 @@ jobs:
   evaluate-with-mini-agent:
     runs-on: windows-latest
     needs: get-entries
+    outputs:
+      results-dir: ${{ env.EVALUATION_RESULTS_DIR }}
     env:
       BC_CONTAINER_NAME: bcbench
       BC_CONTAINER_USERNAME: admin
@@ -55,10 +57,8 @@ jobs:
         run: |
           $args = @(
             'evaluate', 'mini', "${{ matrix.entry }}",
-            '--container-name', "${{ steps.setup-env.outputs.container_name }}",
             '--repo-path', "${{ steps.setup-env.outputs.nav_clone_path }}",
             '--output-dir', "${{ env.EVALUATION_RESULTS_DIR }}",
-            '--run-id', '${{ github.run_id }}',
             '--step-limit', '50'
           )
           if ('${{ github.event.inputs.bc_tools_enabled }}' -eq 'true') {
@@ -72,7 +72,7 @@ jobs:
         if: always()
         with:
           name: evaluation-results-${{ github.run_id }}-${{ matrix.entry }}
-          path: "${{ env.EVALUATION_RESULTS_DIR }}/"
+          path: ${{ env.EVALUATION_RESULTS_DIR }}/
           retention-days: 30
 
   summarize-results:
@@ -80,5 +80,4 @@ jobs:
     if: always()
     uses: ./.github/workflows/summarize-results.yml
     with:
-      run-id: ${{ github.run_id }}
-      results-dir: evaluation_results
+      results-dir: ${{ needs.evaluate-with-mini-agent.outputs.results-dir }}

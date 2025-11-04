@@ -16,12 +16,14 @@ jobs:
   evaluate-with-copilot-cli:
     runs-on: windows-latest
     needs: get-entries
-    if: needs.get-entries.outputs.entries != '[]'
-    name: ${{ matrix.entry }}
+    outputs:
+      results-dir: ${{ env.EVALUATION_RESULTS_DIR }}
     env:
       BC_CONTAINER_NAME: bcbench
       BC_CONTAINER_USERNAME: admin
       BC_CONTAINER_PASSWORD: ${{ secrets.BC_CONTAINER_PASSWORD }}
+    if: needs.get-entries.outputs.entries != '[]'
+    name: ${{ matrix.entry }}
     strategy:
       fail-fast: false
       max-parallel: 10
@@ -51,10 +53,8 @@ jobs:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           uv run bcbench evaluate copilot "${{ matrix.entry }}" `
-            --container-name "${{ steps.setup-env.outputs.container_name }}" `
             --repo-path "${{ steps.setup-env.outputs.nav_clone_path }}" `
-            --output-dir "${{ env.EVALUATION_RESULTS_DIR }}" `
-            --run-id "${{ github.run_id }}"
+            --output-dir "${{ env.EVALUATION_RESULTS_DIR }}"
         shell: pwsh
 
       - name: Upload evaluation results
@@ -70,5 +70,4 @@ jobs:
     if: always()
     uses: ./.github/workflows/summarize-results.yml
     with:
-      run-id: ${{ github.run_id }}
-      results-dir: evaluation_results
+      results-dir: ${{ needs.evaluate-with-copilot-cli.outputs.results-dir }}

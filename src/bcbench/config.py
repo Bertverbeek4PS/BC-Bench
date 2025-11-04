@@ -37,6 +37,7 @@ class PathConfig:
     dataset_schema_path: Path
     nav_repo_path: Path
     ps_script_path: Path
+    evaluation_results_path: Path
 
     @classmethod
     def from_root(cls, root: Path) -> PathConfig:
@@ -47,6 +48,7 @@ class PathConfig:
             dataset_schema_path=root / "dataset" / "schema.json",
             nav_repo_path=root.parent / "NAV",
             ps_script_path=root / "scripts",
+            evaluation_results_path=root / "evaluation_results",
         )
 
 

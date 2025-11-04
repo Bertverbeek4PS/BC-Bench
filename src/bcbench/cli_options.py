@@ -27,9 +27,9 @@ OutputDir = Annotated[
     typer.Option(help="Directory to save evaluation results"),
 ]
 
-OptionalOutputDir = Annotated[
-    Path | None,
-    typer.Option(help="Directory to save output result"),
+RunId = Annotated[
+    str,
+    typer.Option(envvar="GITHUB_RUN_ID", help="Unique identifier for this evaluation run"),
 ]
 
 ContainerName = Annotated[
