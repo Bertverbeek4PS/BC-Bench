@@ -47,6 +47,7 @@
     },
     "FAIL_TO_PASS": {
       "type": "array",
+      "minItems": 1,
       "description": "A json list of test entries representing the set of tests resolved by the PR and tied to the issue resolution",
       "items": {
         "type": "object",
