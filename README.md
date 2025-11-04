@@ -9,6 +9,7 @@ A benchmark for evaluating AI coding on Business Central (AL) development tasks,
 | `dataset/` | Dataset schema and benchmark entries |
 | `src/bcbench/` | Python package with CLI, agent, collection, validation utilities |
 | `scripts/` | PowerShell scripts for environment setup and dataset verification using AL-GO/BCContainerHelper |
+| `tests/` | tests for the CLI python package |
 
 ## Quick start
 
@@ -27,7 +28,7 @@ uv run bcbench --help
 
 ### Environment Setup
 
-Create a `.env` file in the root directory with required credentials (needed for data collection and agent runs). See [.env.sample](.env.sample) for the template.
+Create a `.env` file in the root directory with required credentials and configuration. See [.env.sample](.env.sample) for the template.
 
 ## Dataset
 
@@ -46,13 +47,11 @@ A minimal agent loop based on [mini-swe-agent](https://github.com/SWE-agent/mini
 
 > Currently, top-performing systems represent a wide variety of AI scaffolds; from simple LM agent loops, to RAG systems, to multi-rollout and review type systems.
 
-Its simplicity makes it perfect for establishing baseline performance. See [mini-BC-agent](src/bcbench/agent/mini/agent.py).
+Its simplicity makes it perfect for establishing baseline performance and getting things up and running. See [mini-BC-agent](src/bcbench/agent/mini/agent.py).
 
 ### GitHub Copilot CLI
 
-The [GitHub Copilot CLI](https://github.com/github/copilot-cli) (public preview Sept 2025) supports MCP servers, tools, and agent mode-making it a good candidate for automated workflows.
-
-**TODO**: Integrate and evaluate
+The [GitHub Copilot CLI](https://github.com/github/copilot-cli) (public preview Sept 2025) supports MCP servers, tools, and agent mode, closely simulates real developers' workflow (VSCode and Coding Agent), making it a good candidate for automated workflows.
 
 ### GitHub Copilot in VS Code
 

@@ -6,7 +6,7 @@
 		"ghcr.io/devcontainers-contrib/features/uv": {},
 		"ghcr.io/devcontainers-contrib/features/pre-commit": {}
 	},
-	"postCreateCommand": "uv sync && pre-commit install",
+	"postCreateCommand": "uv sync --all-extras && pre-commit install",
 	"customizations": {
 		"vscode": {
 			"extensions": [
