@@ -2,6 +2,7 @@
 
 import subprocess
 from pathlib import Path
+from string import Template
 
 from bcbench.config import get_config
 from bcbench.exceptions import BuildError, TestExecutionError
@@ -11,86 +12,107 @@ logger = get_logger(__name__)
 _config = get_config()
 
 
-def _build_ps_script_header(app_utils_path: Path) -> str:
-    """Build common PowerShell script header with module imports."""
-    return f"""
+def _escape_ps_string(value: str) -> str:
+    """Escape single quotes for PowerShell strings.
+
+    In PowerShell single-quoted strings, single quotes are escaped by doubling them.
+    """
+    return value.replace("'", "''")
+
+
+# PowerShell script templates using Python's built-in string.Template
+_BUILD_AND_PUBLISH_TEMPLATE = Template(
+    """
 Import-Module BcContainerHelper -Force -DisableNameChecking
-Import-Module '{app_utils_path}' -Force
-$ErrorActionPreference = 'Stop'
-"""
+Import-Module '$app_utils_path' -Force
+$$ErrorActionPreference = 'Stop'
 
+$$projectPath = '$project_path'
+$$password = ConvertTo-SecureString '$password' -AsPlainText -Force
+$$credential = New-Object System.Management.Automation.PSCredential('$username', $$password)
 
-def _build_ps_credential_setup(username: str, password: str) -> str:
-    """Build PowerShell credential setup commands."""
-    return f"""
-$password = ConvertTo-SecureString '{password}' -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential('{username}', $password)
-"""
+Update-AppProjectVersion -ProjectPath $$projectPath -Version $version
+Invoke-AppBuildAndPublish -containerName '$container_name' -appProjectFolder $$projectPath -credential $$credential -skipVerification -useDevEndpoint
+""".strip()
+)
+
+_TEST_EXECUTION_TEMPLATE = Template(
+    """
+Import-Module BcContainerHelper -Force -DisableNameChecking
+Import-Module '$app_utils_path' -Force
+$$ErrorActionPreference = 'Stop'
+
+$$password = ConvertTo-SecureString '$password' -AsPlainText -Force
+$$credential = New-Object System.Management.Automation.PSCredential('$username', $$password)
+
+Write-Host "Running tests for codeunit $codeunit_id"
+Invoke-BCTest -containerName '$container_name' -credential $$credential -codeunitID $codeunit_id$function_param
+""".strip()
+)
+
+_DATASET_TESTS_TEMPLATE = Template(
+    """
+Import-Module BcContainerHelper -Force -DisableNameChecking
+Import-Module '$app_utils_path' -Force
+$$ErrorActionPreference = 'Stop'
+
+$$password = ConvertTo-SecureString '$password' -AsPlainText -Force
+$$credential = New-Object System.Management.Automation.PSCredential('$username', $$password)
+
+$$testEntries = '$test_entries_json' | ConvertFrom-Json
+
+Invoke-DatasetTests -containerName '$container_name' -credential $$credential -testEntries $$testEntries -expectation '$expectation'
+""".strip()
+)
 
 
 def build_ps_app_build_and_publish(container_name: str, username: str, password: str, project_path: Path, version: str) -> str:
-    """Build complete PowerShell script for app build and publish."""
     app_utils_path = _config.paths.ps_script_path / "AppUtils.psm1"
 
-    return (
-        _build_ps_script_header(app_utils_path)
-        + f"\n$projectPath = '{project_path}'"
-        + _build_ps_credential_setup(username, password)
-        + f"\nUpdate-AppProjectVersion -ProjectPath $projectPath -Version {version}"
-        + f"\nInvoke-AppBuildAndPublish -containerName '{container_name}' -appProjectFolder $projectPath -credential $credential -skipVerification -useDevEndpoint\n"
+    return _BUILD_AND_PUBLISH_TEMPLATE.substitute(
+        app_utils_path=_escape_ps_string(str(app_utils_path)),
+        container_name=_escape_ps_string(container_name),
+        username=_escape_ps_string(username),
+        password=_escape_ps_string(password),
+        project_path=_escape_ps_string(str(project_path)),
+        version=version,
     )
 
 
-def build_ps_test_script(
-    container_name: str,
-    username: str,
-    password: str,
-    codeunit_id: int,
-    function_names: list[str] | None = None,
-) -> str:
-    """Build complete PowerShell script for running tests."""
+def build_ps_test_script(container_name: str, username: str, password: str, codeunit_id: int, function_names: list[str] | None = None) -> str:
     app_utils_path = _config.paths.ps_script_path / "AppUtils.psm1"
 
+    # Build function parameter if needed
     if function_names:
-        function_array = ", ".join([f"'{fn}'" for fn in function_names])
-        function_param = f"-functionNames @({function_array})"
+        escaped_names = [f"'{_escape_ps_string(fn)}'" for fn in function_names]
+        function_param = f" -functionNames @({', '.join(escaped_names)})"
     else:
         function_param = ""
 
-    return (
-        _build_ps_script_header(app_utils_path)
-        + _build_ps_credential_setup(username, password)
-        + f'\nWrite-Host "Running tests for codeunit {codeunit_id}"\n'
-        + f"Invoke-BCTest -containerName '{container_name}' -credential $credential -codeunitID {codeunit_id} {function_param}\n"
+    return _TEST_EXECUTION_TEMPLATE.substitute(
+        app_utils_path=_escape_ps_string(str(app_utils_path)),
+        container_name=_escape_ps_string(container_name),
+        username=_escape_ps_string(username),
+        password=_escape_ps_string(password),
+        codeunit_id=codeunit_id,
+        function_param=function_param,
     )
 
 
-def build_ps_dataset_tests_script(
-    container_name: str,
-    username: str,
-    password: str,
-    test_entries_json: str,
-    expectation: str,
-) -> str:
-    """Build complete PowerShell script for running dataset tests."""
+def build_ps_dataset_tests_script(container_name: str, username: str, password: str, test_entries_json: str, expectation: str) -> str:
     app_utils_path = _config.paths.ps_script_path / "AppUtils.psm1"
 
-    return (
-        _build_ps_script_header(app_utils_path)
-        + _build_ps_credential_setup(username, password)
-        + f"\n$testEntries = '{test_entries_json}' | ConvertFrom-Json\n"
-        + f"\nInvoke-DatasetTests -containerName '{container_name}' -credential $credential -testEntries $testEntries -expectation '{expectation}'\n"
+    return _DATASET_TESTS_TEMPLATE.substitute(
+        app_utils_path=_escape_ps_string(str(app_utils_path)),
+        container_name=_escape_ps_string(container_name),
+        username=_escape_ps_string(username),
+        password=_escape_ps_string(password),
+        test_entries_json=_escape_ps_string(test_entries_json),
+        expectation=_escape_ps_string(expectation),
     )
 
 
-def build_and_publish_projects(
-    repo_path: Path,
-    project_paths: list[str],
-    container_name: str,
-    username: str,
-    password: str,
-    version: str,
-) -> None:
+def build_and_publish_projects(repo_path: Path, project_paths: list[str], container_name: str, username: str, password: str, version: str) -> None:
     """Build and publish all projects."""
     logger.info(f"Building and publishing {len(project_paths)} projects")
 
@@ -124,12 +146,7 @@ def build_and_publish_projects(
     logger.info("All projects built and published")
 
 
-def run_tests(
-    entry,
-    container_name: str,
-    username: str,
-    password: str,
-) -> None:
+def run_tests(entry, container_name: str, username: str, password: str) -> None:
     """Run fail-to-pass and pass-to-pass tests."""
     logger.info("Running tests")
 
@@ -144,13 +161,7 @@ def run_tests(
     logger.info("All tests completed")
 
 
-def _run_test_suite(
-    test_entries: list,
-    expectation: str,
-    container_name: str,
-    username: str,
-    password: str,
-) -> None:
+def _run_test_suite(test_entries: list, expectation: str, container_name: str, username: str, password: str) -> None:
     """Run a suite of tests."""
     test_entries_json = str(test_entries).replace("'", '"')
 
