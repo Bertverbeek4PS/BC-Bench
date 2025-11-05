@@ -1,0 +1,52 @@
+[
+  {
+    "agent_name": "GitHub Copilot CLI",
+    "model": "claude-sonnet-4",
+    "total": 19,
+    "resolved": 7,
+    "average_duration": 0,
+    "average_prompt_tokens": 0,
+    "average_completion_tokens": 0,
+    "date": "2025-11-05"
+  },
+  {
+    "agent_name": "GitHub Copilot CLI",
+    "model": "claude-sonnet-4.5",
+    "total": 19,
+    "resolved": 9,
+    "average_duration": 0,
+    "average_prompt_tokens": 0,
+    "average_completion_tokens": 0,
+    "date": "2025-11-04"
+  },
+  {
+    "agent_name": "GitHub Copilot CLI",
+    "model": "claude-haiku-4.5",
+    "total": 19,
+    "resolved": 10,
+    "average_duration": 0,
+    "average_prompt_tokens": 0,
+    "average_completion_tokens": 0,
+    "date": "2025-11-04"
+  },
+  {
+    "agent_name": "GitHub Copilot CLI",
+    "model": "gpt-5",
+    "total": 19,
+    "resolved": 5,
+    "average_duration": 0,
+    "average_prompt_tokens": 0,
+    "average_completion_tokens": 0,
+    "date": "2025-11-04"
+  },
+  {
+    "agent_name": "mini-bc-agent",
+    "model": "azure/gpt-4.1",
+    "total": 19,
+    "resolved": 6,
+    "average_duration": 0,
+    "average_prompt_tokens": 0,
+    "average_completion_tokens": 0,
+    "date": "2025-11-05"
+  }
+]
