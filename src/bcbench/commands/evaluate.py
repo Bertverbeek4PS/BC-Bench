@@ -1,5 +1,6 @@
 """CLI commands for evaluating agents on benchmark datasets."""
 
+import random
 import shutil
 from pathlib import Path
 from typing import Literal
@@ -13,6 +14,7 @@ from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry, load_dataset_entries
 from bcbench.evaluate import EvaluationContext, run_evaluation_pipeline
 from bcbench.logger import get_logger
+from bcbench.results import EvaluationResult
 
 logger = get_logger(__name__)
 _config = get_config()
@@ -156,4 +158,64 @@ def evaluate_copilot(
     )
 
     logger.info("Evaluation complete!")
+    logger.info(f"Results saved to: {run_dir}")
+
+
+@evaluate_app.command("mock", hidden=True)
+def evaluate_mock(
+    entry_id: Annotated[str, typer.Argument(help="Entry ID to run")],
+    dataset_path: DatasetPath = _config.paths.dataset_path,
+    output_dir: OutputDir = _config.paths.evaluation_results_path,
+    run_id: RunId = "mock_run",
+):
+    """
+    Evaluate mock agent on single dataset entry for testing purposes.
+    """
+    entries: list[DatasetEntry] = load_dataset_entries(dataset_path, entry_id=entry_id)
+    entry: DatasetEntry = entries[0]
+    logger.info(f"Loaded {entry_id} entry from dataset")
+
+    run_dir: Path = output_dir / run_id
+    if run_dir.exists():
+        shutil.rmtree(run_dir)
+    run_dir.mkdir(parents=True)
+
+    logger.info(f"Running evaluation on entry {entry_id} with mock agent")
+
+    # Randomize agent metrics to test different scenarios
+    metrics_scenarios: list[dict[str, float | int]] = [
+        {"agent_execution_time": 0.1, "prompt_tokens": 100, "completion_tokens": 50},
+        {"agent_execution_time": 0.2, "prompt_tokens": 250},
+        {"agent_execution_time": 0.15},
+        {},  # No metrics
+        {"prompt_tokens": 500, "completion_tokens": 100},
+    ]
+    agent_metrics = random.choice(metrics_scenarios)
+    logger.info(f"Using agent metrics: {agent_metrics if agent_metrics else 'None'}")
+
+    context = EvaluationContext(
+        entry=entry,
+        repo_path=Path(),
+        result_dir=run_dir,
+        container_name="no container",
+        username="",
+        password="",
+        model="mock-model",
+        agent_name="mock-agent",
+        agent_metrics=agent_metrics if agent_metrics else None,
+    )
+
+    match random.choice(["success", "build-fail", "test-fail"]):
+        case "success":
+            result = EvaluationResult.create_success(context, "MOCK_PATCH_CONTENT")
+        case "build-fail":
+            result = EvaluationResult.create_build_failure(context, "Mock build failure")
+        case "test-fail":
+            result = EvaluationResult.create_test_failure(context, "Mock test failure")
+        case _:
+            result = EvaluationResult.create_unexpected_error(context, Exception("Invalid scenario"))
+
+    result.save(context.result_dir, f"{context.entry.instance_id}{_config.file_patterns.result_pattern}")
+
+    logger.info("Mock evaluation complete!")
     logger.info(f"Results saved to: {run_dir}")

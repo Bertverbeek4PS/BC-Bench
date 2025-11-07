@@ -16,6 +16,11 @@ on:
         description: 'type of agent used for evaluation'
         required: true
         type: string
+      mock:
+        description: 'whether a mock evaluation was used'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   summarize-results:
@@ -45,7 +50,7 @@ jobs:
           name: evaluation-summary
           path: ${{ inputs.results-dir }}/${{ github.run_id }}/evaluation_summary.json
           if-no-files-found: error
-          retention-days: 30
+          retention-days: ${{ inputs.mock && 1 || 30 }}
 
       - name: Upload result with bceval to Braintrust
         env:

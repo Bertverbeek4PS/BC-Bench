@@ -10,8 +10,11 @@ on:
 permissions:
   contents: read
 
+env:
+  EVALUATION_RESULTS_DIR: evaluation_results
+
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +31,45 @@ jobs:
 
       - name: Run tests with coverage
         run: uv run pytest --cov=src/bcbench --cov-report=term-missing
+
+  mock-evaluation:
+    runs-on: ubuntu-latest
+    outputs:
+      results-dir: ${{ env.EVALUATION_RESULTS_DIR }}
+    strategy:
+      fail-fast: false
+      matrix:
+        entry:
+          - microsoftInternal__NAV-210528
+          - microsoftInternal__NAV-224009
+          - microsoftInternal__NAV-211710
+    name: ${{ matrix.entry }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python with UV
+        uses: ./.github/actions/setup-python-uv
+
+      - name: Run mock evaluation for ${{ matrix.entry }}
+        run: |
+          uv run bcbench evaluate mock "${{ matrix.entry }}" --output-dir evaluation_results --run-id ${{ github.run_id }}
+        shell: pwsh
+
+      - name: Upload mock evaluation results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.entry }}
+          path: ${{ env.EVALUATION_RESULTS_DIR }}/
+          retention-days: 1
+
+  summarize-results:
+    needs: mock-evaluation
+    if: always()
+    uses: ./.github/workflows/summarize-results.yml
+    with:
+      results-dir: ${{ needs.mock-evaluation.outputs.results-dir }}
+      model: 'mock-model'
+      agent: 'mock-agent'
+      mock: true
+    secrets: inherit
