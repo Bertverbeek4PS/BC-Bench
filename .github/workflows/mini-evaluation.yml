@@ -73,7 +73,6 @@ jobs:
             $args += '--enable-bc-tools'
           }
           uv run bcbench @args
-        shell: pwsh
 
       - name: Upload evaluation results
         uses: actions/upload-artifact@v4

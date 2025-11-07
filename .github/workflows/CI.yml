@@ -24,7 +24,7 @@ jobs:
       - name: Setup Python with UV
         uses: ./.github/actions/setup-python-uv
         with:
-          all-extras: 'true'
+          all-extras: true
 
       - name: Run Ruff
         run: uv run ruff check --output-format=github .
@@ -52,9 +52,7 @@ jobs:
         uses: ./.github/actions/setup-python-uv
 
       - name: Run mock evaluation for ${{ matrix.entry }}
-        run: |
-          uv run bcbench evaluate mock "${{ matrix.entry }}" --output-dir evaluation_results --run-id ${{ github.run_id }}
-        shell: pwsh
+        run: uv run bcbench evaluate mock "${{ matrix.entry }}" --output-dir evaluation_results --run-id ${{ github.run_id }}
 
       - name: Upload mock evaluation results
         uses: actions/upload-artifact@v4

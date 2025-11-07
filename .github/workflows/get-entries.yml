@@ -35,9 +35,7 @@ jobs:
 
       - name: Validate dataset schema
         if: inputs.validate-schema
-        run: |
-          uv run bcbench dataset validate
-        shell: pwsh
+        run: uv run bcbench dataset validate
 
       - name: Get entries for matrix
         id: get-entries
@@ -47,4 +45,3 @@ jobs:
           } else {
             uv run bcbench dataset list --github-output entries
           }
-        shell: pwsh

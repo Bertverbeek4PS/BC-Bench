@@ -55,9 +55,7 @@ jobs:
         uses: ./.github/actions/setup-python-uv
 
       - name: Install GitHub Copilot CLI
-        run: |
-          npm install -g @github/copilot@0.0.351
-        shell: pwsh
+        run: npm install -g @github/copilot@0.0.351
 
       - name: Run GitHub Copilot CLI for entry ${{ matrix.entry }}
         env:
@@ -67,7 +65,6 @@ jobs:
             --model "${{ github.event.inputs.model }}" `
             --repo-path "${{ steps.setup-env.outputs.repo_path }}" `
             --output-dir "${{ env.EVALUATION_RESULTS_DIR }}"
-        shell: pwsh
 
       - name: Upload evaluation results
         uses: actions/upload-artifact@v4
