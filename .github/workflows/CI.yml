@@ -67,7 +67,7 @@ jobs:
     uses: ./.github/workflows/summarize-results.yml
     with:
       results-dir: ${{ needs.mock-evaluation.outputs.results-dir }}
-      model: 'mock-model'
+      model: ${{ github.run_id }}
       agent: 'mock-agent'
       mock: true
     secrets: inherit
