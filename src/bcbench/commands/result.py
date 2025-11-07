@@ -28,13 +28,7 @@ def result_summarize(
     """
     Summarize evaluation results from a completed run.
 
-    Example:
-        bcbench result summarize mini_test_run
-
-    Output:
-        - GitHub/Console summary of evaluation results
-        - A JSONL file with all results from the job
-        - A JSON summary file
+    Aggregates individual instance results, displays job summaries and generates bceval output format.
     """
     run_dir: Path = result_dir / run_id
 
