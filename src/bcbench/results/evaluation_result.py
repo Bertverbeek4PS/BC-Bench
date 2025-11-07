@@ -140,7 +140,7 @@ class EvaluationResultSummary:
             github_run_id=run_id,
         )
 
-    def save(self, output_dir: Path, summary_file: str = "evaluation_summary.json") -> None:
+    def save(self, output_dir: Path, summary_file: str) -> None:
         output_file = output_dir / summary_file
         with open(output_file, "w", encoding="utf-8") as f:
             summary_dict = {

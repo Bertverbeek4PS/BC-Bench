@@ -21,9 +21,10 @@ class TestEvaluationResultSummary:
             average_completion_tokens=1200.0,
         )
 
-        summary.save(tmp_path)
+        summary_file = "test.json"
+        summary.save(tmp_path, summary_file)
 
-        output_file = tmp_path / "evaluation_summary.json"
+        output_file = tmp_path / summary_file
         assert output_file.exists()
 
         with open(output_file) as f:

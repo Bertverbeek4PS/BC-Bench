@@ -20,8 +20,9 @@ result_app = typer.Typer(help="Process and display evaluation results")
 def result_summarize(
     run_id: RunId,
     result_dir: OutputDir = _config.paths.evaluation_results_path,
-    result_pattern: Annotated[str, typer.Option(help="Pattern for the result files")] = f"*{_config.file_patterns.result_pattern}",
+    result_pattern: Annotated[str, typer.Option(help="Pattern for the per instances result files")] = f"*{_config.file_patterns.result_pattern}",
     dataset_path: DatasetPath = _config.paths.dataset_path,
+    summary_output: Annotated[str, typer.Option(help="Output filename for summary JSON")] = "evaluation_summary.json",
     bceval_output: Annotated[str, typer.Option(help="Output filename for bceval results")] = "bceval_results.jsonl",
 ):
     """
@@ -73,4 +74,4 @@ def result_summarize(
 
     # Save summary JSON
     summary = EvaluationResultSummary.from_results(results, run_id=run_id)
-    summary.save(run_dir)
+    summary.save(run_dir, summary_output)
