@@ -63,6 +63,23 @@ class EvaluationResult:
         metrics = context.agent_metrics or {}
         prompt_tokens = metrics.get("prompt_tokens")
         completion_tokens = metrics.get("completion_tokens")
+        agent_execution_time = metrics.get("agent_execution_time")
+
+        # Warn about missing critical metrics that affect result quality
+        if context.agent_metrics is None:
+            logger.warning(f"Creating result for {context.entry.instance_id} with no agent metrics - performance data will be unavailable")
+        else:
+            missing_metrics = []
+            if agent_execution_time is None:
+                missing_metrics.append("agent_execution_time")
+            if prompt_tokens is None:
+                missing_metrics.append("prompt_tokens")
+            if completion_tokens is None:
+                missing_metrics.append("completion_tokens")
+
+            if missing_metrics:
+                logger.warning(f"Result for {context.entry.instance_id} missing metrics: {', '.join(missing_metrics)}")
+
         project = context.entry.extract_project_name()
         return cls(
             instance_id=context.entry.instance_id,
@@ -73,7 +90,7 @@ class EvaluationResult:
             agent_name=context.agent_name,
             generated_patch=generated_patch,
             error_message=error_message,
-            agent_execution_time=metrics.get("agent_execution_time"),
+            agent_execution_time=agent_execution_time,
             prompt_tokens=int(prompt_tokens) if prompt_tokens is not None else None,
             completion_tokens=int(completion_tokens) if completion_tokens is not None else None,
         )
