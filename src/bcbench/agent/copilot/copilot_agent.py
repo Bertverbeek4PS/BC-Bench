@@ -1,6 +1,7 @@
 """GitHub Copilot CLI Agent implementation."""
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Sequence
@@ -33,10 +34,15 @@ def run_copilot_agent(
     logger.info(f"Executing Copilot CLI in directory: {repo_path}")
     logger.debug(f"Using prompt:\n{prompt}")
 
+    # Resolve the copilot command path
+    copilot_cmd = shutil.which("copilot")
+    if not copilot_cmd:
+        raise AgentError("Copilot CLI not found in PATH. Please ensure it is installed and available.")
+
     try:
         result = subprocess.run(
             [
-                "copilot",
+                copilot_cmd,
                 "--allow-all-tools",  # required for non-interactive mode
                 "--allow-all-paths",  # might be required for non-interactive mode, seems to hang when trying to access files outside allowed dirs
                 "--disable-builtin-mcps",
@@ -52,7 +58,6 @@ def run_copilot_agent(
             text=True,
             timeout=_config.timeout.github_copilot_cli,
             check=True,
-            shell=True,  # Required on Windows to resolve npm global commands
         )
 
         print(result.stdout, flush=True)
