@@ -29,7 +29,7 @@ jobs:
   get-entries:
     uses: ./.github/workflows/get-entries.yml
     with:
-      test-run: ${{ github.event.inputs.test-run }}
+      test-run: ${{ inputs.test-run }}
 
   evaluate-with-copilot-cli:
     runs-on: windows-latest
@@ -69,7 +69,7 @@ jobs:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           uv run bcbench evaluate copilot "${{ matrix.entry }}" `
-            --model "${{ github.event.inputs.model }}" `
+            --model "${{ inputs.model }}" `
             --repo-path "${{ steps.setup-env.outputs.repo_path }}" `
             --output-dir "${{ env.EVALUATION_RESULTS_DIR }}"
 
@@ -79,7 +79,7 @@ jobs:
         with:
           name: evaluation-results-${{ github.run_id }}-${{ matrix.entry }}
           path: ${{ env.EVALUATION_RESULTS_DIR }}
-          retention-days: ${{ github.event.inputs.test-run && 1 || 30 }}
+          retention-days: ${{ inputs.test-run && 1 || 30 }}
 
   summarize-results:
     needs: evaluate-with-copilot-cli
@@ -89,7 +89,7 @@ jobs:
       contents: write
     with:
       results-dir: ${{ needs.evaluate-with-copilot-cli.outputs.results-dir }}
-      model: ${{ github.event.inputs.model }}
+      model: ${{ inputs.model }}
       agent: 'GitHub Copilot CLI'
-      mock: ${{ github.event.inputs.test-run }}
+      mock: ${{ inputs.test-run }}
     secrets: inherit

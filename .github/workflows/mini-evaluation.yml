@@ -31,7 +31,7 @@ jobs:
   get-entries:
     uses: ./.github/workflows/get-entries.yml
     with:
-      test-run: ${{ github.event.inputs.test-run }}
+      test-run: ${{ inputs.test-run }}
 
   evaluate-with-mini-agent:
     runs-on: windows-latest
@@ -71,12 +71,12 @@ jobs:
         run: |
           $args = @(
             'evaluate', 'mini', "${{ matrix.entry }}",
-            '--model', "${{ github.event.inputs.model }}",
+            '--model', "${{ inputs.model }}",
             '--repo-path', "${{ steps.setup-env.outputs.repo_path }}",
             '--output-dir', "${{ env.EVALUATION_RESULTS_DIR }}",
             '--step-limit', '50'
           )
-          if ('${{ github.event.inputs.bc_tools_enabled }}' -eq 'true') {
+          if ('${{ inputs.bc_tools_enabled }}' -eq 'true') {
             $args += '--enable-bc-tools'
           }
           uv run bcbench @args
@@ -87,7 +87,7 @@ jobs:
         with:
           name: evaluation-results-${{ github.run_id }}-${{ matrix.entry }}
           path: ${{ env.EVALUATION_RESULTS_DIR }}
-          retention-days: ${{ github.event.inputs.test-run && 1 || 30 }}
+          retention-days: ${{ inputs.test-run && 1 || 30 }}
 
   summarize-results:
     needs: evaluate-with-mini-agent
@@ -97,7 +97,7 @@ jobs:
       contents: write
     with:
       results-dir: ${{ needs.evaluate-with-mini-agent.outputs.results-dir }}
-      model: ${{ github.event.inputs.model }}
+      model: ${{ inputs.model }}
       agent: 'mini-bc-agent'
-      mock: ${{ github.event.inputs.test-run }}
+      mock: ${{ inputs.test-run }}
     secrets: inherit
