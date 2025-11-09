@@ -50,7 +50,7 @@ jobs:
           if [[ "${{ inputs.modified-only }}" == "true" ]]; then
             cmd="$cmd --modified-only"
           elif [[ "${{ inputs.test-run }}" == "true" ]]; then
-            cmd="$cmd --limit 2"
+            cmd="$cmd --test-run"
           fi
 
           eval "$cmd"
