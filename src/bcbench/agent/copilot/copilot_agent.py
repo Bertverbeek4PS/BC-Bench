@@ -3,6 +3,7 @@
 import re
 import subprocess
 from pathlib import Path
+from typing import Sequence
 
 from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
@@ -55,9 +56,14 @@ def run_copilot_agent(
         )
 
         print(result.stdout, flush=True)
+        if result.stderr:
+            print(result.stderr, flush=True)
         logger.info(f"Copilot CLI run complete for: {entry.instance_id}")
 
-        return _parse_metrics(result.stdout.strip().splitlines()[-20:])
+        # Metrics are typically in stderr, but check both
+        stderr_lines = (result.stderr or "").splitlines()
+        stdout_last_10 = (result.stdout or "").splitlines()[-10:]
+        return _parse_metrics(stderr_lines + stdout_last_10)
     except subprocess.TimeoutExpired:
         # timeout should not raise an exception, we will evaluate whatever copilot did so far
         logger.error(f"Copilot CLI timed out after {_config.timeout.github_copilot_cli} seconds")
@@ -86,7 +92,7 @@ Issue details:
 """
 
 
-def _parse_metrics(output_lines: list[str]) -> dict[str, float | int] | None:
+def _parse_metrics(output_lines: Sequence[str]) -> dict[str, float | int] | None:
     """Parse metrics from Copilot CLI output.
     This is highly delicate and depends on the exact formatting of the CLI output.
 
