@@ -3,6 +3,7 @@
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -49,7 +50,7 @@ def run_copilot_agent(
                 f"--model={model}",
                 "--no-custom-instructions",
                 "--log-level=debug",
-                f"--log-dir={output_dir}",
+                f"--log-dir={output_dir.resolve()}",
                 "-p",
                 prompt.replace("\r", "").replace("\n", " "),
             ],
@@ -59,19 +60,21 @@ def run_copilot_agent(
             check=True,
         )
 
-        # Decode output manually with error handling
-        stdout = result.stdout.decode("utf-8", errors="replace") if result.stdout else ""
-        stderr = result.stderr.decode("utf-8", errors="replace") if result.stderr else ""
-
-        print(stdout, flush=True)
-        if stderr:
-            print(stderr, flush=True)
+        # Write directly to stdout buffer as bytes to avoid console encoding issues
+        if result.stdout:
+            sys.stdout.buffer.write(result.stdout)
+            sys.stdout.buffer.flush()
+        if result.stderr:
+            sys.stdout.buffer.write(result.stderr)
+            sys.stdout.buffer.flush()
         logger.info(f"Copilot CLI run complete for: {entry.instance_id}")
 
-        # Metrics are typically in stderr, but check both
+        # Decode output for metrics parsing
+        stderr = result.stderr.decode("utf-8", errors="replace") if result.stderr else ""
+
+        # Metrics are typically in stderr
         stderr_lines = stderr.splitlines()
-        stdout_last_10 = stdout.splitlines()[-10:]
-        return _parse_metrics(stderr_lines + stdout_last_10)
+        return _parse_metrics(stderr_lines)
     except subprocess.TimeoutExpired:
         # timeout should not raise an exception, we will evaluate whatever copilot did so far
         logger.error(f"Copilot CLI timed out after {_config.timeout.github_copilot_cli} seconds")
@@ -79,7 +82,7 @@ def run_copilot_agent(
     except subprocess.CalledProcessError as e:
         raise AgentError(f"Copilot CLI execution failed: {e}") from None
     except Exception as e:
-        logger.error(f"Unexpected error running Copilot CLI: {e}")
+        logger.exception(f"Unexpected error running Copilot CLI: {e}")
         raise
 
 
