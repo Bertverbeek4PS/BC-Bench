@@ -11,6 +11,9 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+    },
     "python.testing.pytestArgs": [
         "tests"
     ],
