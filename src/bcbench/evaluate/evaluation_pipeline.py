@@ -32,24 +32,24 @@ def run_evaluation_pipeline(
         agent_runner: Function that runs the specific agent and returns metrics dict or None
                      Expected metrics keys: agent_execution_time, prompt_tokens, completion_tokens, etc
     """
+    # Setup environment
+    clean_repo(context.repo_path)
+    checkout_commit(context.repo_path, context.entry.base_commit)
+
+    # Initial build, ensure symbols, etc. align with base commit
+    build_and_publish_projects(
+        context.repo_path,
+        context.entry.project_paths,
+        context.container_name,
+        context.username,
+        context.password,
+        context.entry.environment_setup_version,
+    )
+
     result = None
     generated_patch: str = ""
 
     try:
-        # Setup environment
-        clean_repo(context.repo_path)
-        checkout_commit(context.repo_path, context.entry.base_commit)
-
-        # Initial build, ensure symbols, etc. align with base commit
-        build_and_publish_projects(
-            context.repo_path,
-            context.entry.project_paths,
-            context.container_name,
-            context.username,
-            context.password,
-            context.entry.environment_setup_version,
-        )
-
         # Run agent (agent-specific)
         with github_log_group(f"{context.agent_name} -- Entry: {context.entry.instance_id}"):
             agent_metrics = agent_runner(context)
