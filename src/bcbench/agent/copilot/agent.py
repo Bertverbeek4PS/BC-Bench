@@ -14,6 +14,7 @@ from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
 from bcbench.exceptions import AgentError
 from bcbench.logger import get_logger
+from bcbench.operations import setup_instructions_from_config
 
 logger = get_logger(__name__)
 _config = get_config()
@@ -33,6 +34,7 @@ def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_d
 
     prompt: str = build_prompt(entry, repo_path, copilot_config)
     mcp_config_json, mcp_server_names = build_mcp_config(copilot_config, repo_path)
+    instructions_enabled: bool = setup_instructions_from_config(copilot_config, entry, repo_path, Path(__file__).parent)
 
     logger.info(f"Executing Copilot CLI in directory: {repo_path}")
     logger.debug(f"Using prompt:\n{prompt}")
@@ -48,13 +50,16 @@ def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_d
             "--allow-all-paths",  # might be required for non-interactive mode, seems to hang when trying to access files outside allowed dirs
             "--disable-builtin-mcps",
             f"--model={model}",
-            "--no-custom-instructions",
             "--log-level=debug",
             f"--log-dir={output_dir.resolve()}",
             f"--prompt={prompt.replace('\r', '').replace('\n', ' ')}",
         ]
+        if not instructions_enabled:
+            cmd_args.append("--no-custom-instructions")
         if mcp_config_json:
             cmd_args.append(f"--additional-mcp-config={mcp_config_json}")
+
+        logger.debug(f"Copilot command args: {cmd_args}")
 
         result = subprocess.run(
             cmd_args,
