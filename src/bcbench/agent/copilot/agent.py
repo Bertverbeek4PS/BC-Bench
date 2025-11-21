@@ -52,6 +52,7 @@ def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_d
             "--disable-builtin-mcps",
             f"--model={model}",
             "--log-level=debug",
+            "--disable-parallel-tools-execution",
             f"--log-dir={output_dir.resolve()}",
             f"--prompt={prompt.replace('\r', '').replace('\n', ' ')}",
         ]
