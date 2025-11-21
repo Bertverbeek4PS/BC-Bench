@@ -14,13 +14,14 @@ from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
 from bcbench.exceptions import AgentError
 from bcbench.logger import get_logger
-from bcbench.operations import setup_instructions_from_config
+from bcbench.operations import setup_custom_agent, setup_instructions_from_config
+from bcbench.types import EvaluationCategory
 
 logger = get_logger(__name__)
 _config = get_config()
 
 
-def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_dir: Path) -> tuple[dict[str, float | int] | None, list[str] | None, bool]:
+def run_copilot_agent(entry: DatasetEntry, model: str, category: EvaluationCategory, repo_path: Path, output_dir: Path) -> tuple[dict[str, float | int] | None, list[str] | None, bool]:
     """Run GitHub Copilot CLI agent on a single dataset entry.
 
     Returns:
@@ -33,9 +34,10 @@ def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_d
 
     logger.info(f"Running GitHub Copilot CLI on: {entry.instance_id}")
 
-    prompt: str = build_prompt(entry, repo_path, copilot_config)
+    prompt: str = build_prompt(entry, repo_path, copilot_config, category)
     mcp_config_json, mcp_server_names = build_mcp_config(copilot_config, repo_path)
-    instructions_enabled: bool = setup_instructions_from_config(copilot_config, entry, repo_path, Path(__file__).parent)
+    instructions_enabled: bool = setup_instructions_from_config(copilot_config, entry, repo_path)
+    custom_agent: str | None = setup_custom_agent(copilot_config, entry, repo_path)
 
     logger.info(f"Executing Copilot CLI in directory: {repo_path}")
     logger.debug(f"Using prompt:\n{prompt}")
@@ -60,6 +62,8 @@ def run_copilot_agent(entry: DatasetEntry, model: str, repo_path: Path, output_d
             cmd_args.append("--no-custom-instructions")
         if mcp_config_json:
             cmd_args.append(f"--additional-mcp-config={mcp_config_json}")
+        if custom_agent:
+            cmd_args.append(f"--agent={custom_agent}")
 
         logger.debug(f"Copilot command args: {cmd_args}")
 

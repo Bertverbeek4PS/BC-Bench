@@ -3,7 +3,10 @@ from datetime import date
 
 import pytest
 
-from bcbench.results.evaluation_result import EvaluationResult, EvaluationResultSummary
+from bcbench.results.bugfix import BugFixResult
+from bcbench.results.evaluation_result import EvaluationResultSummary
+from bcbench.results.testgeneration import TestGenerationResult
+from bcbench.types import EvaluationCategory
 
 
 class TestEvaluationResultSummary:
@@ -15,6 +18,7 @@ class TestEvaluationResultSummary:
             build=9,
             date=date(2025, 1, 15),
             model="gpt-4o",
+            category=EvaluationCategory.BUG_FIX,
             agent_name="copilot-cli",
             average_duration=120.5,
             average_prompt_tokens=5000.0,
@@ -49,6 +53,7 @@ class TestEvaluationResultSummary:
             build=5,
             date=date(2025, 1, 20),
             model="gpt-4",
+            category=EvaluationCategory.TEST_GENERATION,
             agent_name="mini-bc-agent",
             average_duration=90.0,
             average_prompt_tokens=3000.0,
@@ -65,11 +70,12 @@ class TestFromResults:
     @pytest.fixture
     def sample_results(self):
         return [
-            EvaluationResult(
+            BugFixResult(
                 instance_id="test__1",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.BUG_FIX,
                 resolved=True,
                 build=True,
                 error_message=None,
@@ -77,11 +83,12 @@ class TestFromResults:
                 prompt_tokens=5000,
                 completion_tokens=1000,
             ),
-            EvaluationResult(
+            BugFixResult(
                 instance_id="test__2",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.BUG_FIX,
                 resolved=True,
                 build=True,
                 error_message=None,
@@ -89,11 +96,12 @@ class TestFromResults:
                 prompt_tokens=6000,
                 completion_tokens=1500,
             ),
-            EvaluationResult(
+            BugFixResult(
                 instance_id="test__3",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.BUG_FIX,
                 resolved=False,
                 build=False,
                 error_message="Build failed",
@@ -127,11 +135,12 @@ class TestFromResults:
 
     def test_from_results_handles_none_values_in_metrics(self):
         results = [
-            EvaluationResult(
+            BugFixResult(
                 instance_id="test__1",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.BUG_FIX,
                 resolved=True,
                 build=True,
                 error_message=None,
@@ -139,11 +148,12 @@ class TestFromResults:
                 prompt_tokens=5000,
                 completion_tokens=1000,
             ),
-            EvaluationResult(
+            BugFixResult(
                 instance_id="test__2",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.BUG_FIX,
                 resolved=False,
                 build=False,
                 error_message="Error",
@@ -162,11 +172,12 @@ class TestFromResults:
 
     def test_from_results_with_all_none_metrics_returns_zero(self):
         results = [
-            EvaluationResult(
+            TestGenerationResult(
                 instance_id="test__1",
                 project="app",
                 model="gpt-4o",
                 agent_name="copilot-cli",
+                category=EvaluationCategory.TEST_GENERATION,
                 resolved=False,
                 build=False,
                 error_message="Error",

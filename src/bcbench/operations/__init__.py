@@ -13,7 +13,8 @@ from bcbench.operations.git_operations import (
     clean_repo,
     get_generated_diff,
 )
-from bcbench.operations.instruction_operations import setup_instructions_from_config
+from bcbench.operations.instruction_operations import setup_custom_agent, setup_instructions_from_config
+from bcbench.operations.test_operations import extract_tests_from_patch
 
 __all__ = [
     "apply_patch",
@@ -23,7 +24,9 @@ __all__ = [
     "build_ps_test_script",
     "checkout_commit",
     "clean_repo",
+    "extract_tests_from_patch",
     "get_generated_diff",
     "run_tests",
+    "setup_custom_agent",
     "setup_instructions_from_config",
 ]

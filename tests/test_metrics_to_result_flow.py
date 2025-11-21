@@ -1,11 +1,11 @@
-"""Test the complete flow from metrics parsing to evaluation result creation."""
+"""Test the complete metrics flow from parsing to result creation."""
 
 import pytest
 
 from bcbench.agent.copilot.metrics import parse_metrics
 from bcbench.dataset import DatasetEntry
-from bcbench.evaluate.evaluation_context import EvaluationContext
-from bcbench.results import EvaluationResult
+from bcbench.results.bugfix import BugFixResult
+from bcbench.types import EvaluationCategory, EvaluationContext
 
 
 class TestCopilotMetricsToResultFlow:
@@ -29,6 +29,7 @@ class TestCopilotMetricsToResultFlow:
             username="test-user",
             agent_name="copilot-cli",
             model="gpt-4o",
+            category=EvaluationCategory.BUG_FIX,
         )
 
     def test_full_metrics_flow_to_success_result(self, sample_context):
@@ -41,7 +42,7 @@ class TestCopilotMetricsToResultFlow:
 
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.instance_id == "test__metrics-flow-123"
         assert result.resolved is True
@@ -60,7 +61,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time == 45.7
         assert result.prompt_tokens == 50000
@@ -71,7 +72,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time == 90.0
         assert result.prompt_tokens is None
@@ -82,7 +83,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time is None
         assert result.prompt_tokens is None
@@ -97,7 +98,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_test_failure(sample_context, "test_patch")
+        result = BugFixResult.create_test_failure(sample_context, "test_patch")
 
         assert result.resolved is False
         assert result.build is True
@@ -115,7 +116,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_build_failure(sample_context, "test_patch", "Build failed: src/app")
+        result = BugFixResult.create_build_failure(sample_context, "test_patch", "Build failed: src/app")
 
         assert result.resolved is False
         assert result.build is False
@@ -140,14 +141,14 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time == 272.8
         assert result.prompt_tokens == 125500
         assert result.completion_tokens == 3600
 
     def test_context_without_agent_metrics_set(self, sample_context):
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time is None
         assert result.prompt_tokens is None
@@ -156,7 +157,7 @@ class TestCopilotMetricsToResultFlow:
     def test_context_with_empty_metrics_dict(self, sample_context):
         sample_context.agent_metrics = {}
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time is None
         assert result.prompt_tokens is None
@@ -170,7 +171,7 @@ class TestCopilotMetricsToResultFlow:
             "completion_tokens": 3200.0,  # Float from 3.2k
         }
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert isinstance(result.prompt_tokens, int)
         assert isinstance(result.completion_tokens, int)
@@ -186,7 +187,7 @@ class TestCopilotMetricsToResultFlow:
         metrics = parse_metrics(output_lines)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         # Verify metrics are present
         assert result.agent_execution_time == 60.0
@@ -227,6 +228,7 @@ class TestMiniAgentMetricsToResultFlow:
             username="test-user",
             agent_name="mini-bc-agent",
             model="azure/gpt-4.1",
+            category=EvaluationCategory.BUG_FIX,
         )
 
     def test_mini_agent_full_metrics_flow_to_success_result(self, sample_context):
@@ -265,7 +267,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 245.8)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.instance_id == "test__mini-flow-456"
         assert result.resolved is True
@@ -287,7 +289,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 120.0)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.agent_execution_time == 120.0
         assert result.prompt_tokens == 0
@@ -317,7 +319,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 180.5)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_test_failure(sample_context, "test_patch")
+        result = BugFixResult.create_test_failure(sample_context, "test_patch")
 
         assert result.resolved is False
         assert result.build is True
@@ -350,7 +352,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 95.2)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_build_failure(sample_context, "test_patch", "Build failed: src/test")
+        result = BugFixResult.create_build_failure(sample_context, "test_patch", "Build failed: src/test")
 
         assert result.resolved is False
         assert result.build is False
@@ -370,7 +372,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 60.0)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.prompt_tokens == 0
         assert result.completion_tokens == 0
@@ -400,7 +402,7 @@ class TestMiniAgentMetricsToResultFlow:
         metrics = _extract_metrics(mock_agent, 450.3)
         sample_context.agent_metrics = metrics
 
-        result = EvaluationResult.create_success(sample_context, "test_patch")
+        result = BugFixResult.create_success(sample_context, "test_patch")
 
         assert result.prompt_tokens == 125000
         assert result.completion_tokens == 25000

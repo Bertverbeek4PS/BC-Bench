@@ -11,6 +11,7 @@ from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry
 from bcbench.exceptions import ConfigurationError
 from bcbench.logger import get_logger
+from bcbench.types import EvaluationCategory
 
 # Lazy imports to avoid mini-swe-agent startup message for non-agent commands
 if TYPE_CHECKING:
@@ -54,6 +55,7 @@ def run_mini_agent(
     entry: DatasetEntry,
     repo_path: Path,
     model: str,
+    category: EvaluationCategory,
     container_name: str | None = None,
     username: str = "admin",
     password: str | None = None,
@@ -67,6 +69,9 @@ def run_mini_agent(
         None (no MCP servers for mini-bc-agent)
         Boolean indicating if custom instructions were enabled (always False for mini-bc-agent)
     """
+    if category != EvaluationCategory.BUG_FIX:
+        raise ConfigurationError(f"mini-bc-agent currently only supports BUG_FIX category, got: {category}")
+
     config_file = Path(__file__).parent / "config.yaml"
     mini_bc_config = yaml.safe_load(config_file.read_text())
     agent_config = mini_bc_config.get("agent", {})

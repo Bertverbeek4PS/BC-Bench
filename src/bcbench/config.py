@@ -42,6 +42,7 @@ class PathConfig:
     ps_script_path: Path
     evaluation_results_path: Path
     leaderboard_path: Path
+    agent_dir: Path
 
     @classmethod
     def from_root(cls, root: Path) -> PathConfig:
@@ -54,6 +55,7 @@ class PathConfig:
             ps_script_path=root / "scripts",
             evaluation_results_path=root / "evaluation_results",
             leaderboard_path=root / "docs" / "_data" / "leaderboard.json",
+            agent_dir=root / "src" / "bcbench" / "agent" / "copilot",
         )
 
 
@@ -88,6 +90,7 @@ class FilePatternConfig:
     copilot_instruction_naming: str
     copilot_instructions_dirname: str
     copilot_instructions_pattern: str
+    test_project_identifiers: tuple[str, ...]
 
     @classmethod
     def default(cls, instance_pattern: str) -> FilePatternConfig:
@@ -100,6 +103,7 @@ class FilePatternConfig:
             copilot_instruction_naming="copilot-instructions.md",
             copilot_instructions_dirname="instructions",
             copilot_instructions_pattern="*.instructions.md",
+            test_project_identifiers=("test", "tests"),
         )
 
 

@@ -1,5 +1,3 @@
-"""CLI commands for evaluating agents on benchmark datasets."""
-
 import random
 import shutil
 from pathlib import Path
@@ -9,12 +7,23 @@ import typer
 from typing_extensions import Annotated
 
 from bcbench.agent import run_copilot_agent, run_mini_agent
-from bcbench.cli_options import ContainerName, ContainerPassword, ContainerUsername, CopilotModel, DatasetPath, OutputDir, RepoPath, RunId
+from bcbench.cli_options import (
+    ContainerName,
+    ContainerPassword,
+    ContainerUsername,
+    CopilotModel,
+    DatasetPath,
+    EvaluationCategoryOption,
+    OutputDir,
+    RepoPath,
+    RunId,
+)
 from bcbench.config import get_config
 from bcbench.dataset import DatasetEntry, load_dataset_entries
-from bcbench.evaluate import EvaluationContext, run_evaluation_pipeline
+from bcbench.evaluate import create_pipeline
 from bcbench.logger import get_logger
-from bcbench.results import EvaluationResult
+from bcbench.results import BaseEvaluationResult
+from bcbench.types import EvaluationContext
 
 logger = get_logger(__name__)
 _config = get_config()
@@ -28,6 +37,7 @@ def evaluate_mini(
     container_name: ContainerName,
     username: ContainerUsername,
     password: ContainerPassword,
+    category: EvaluationCategoryOption,
     model: Annotated[Literal["azure/gpt-4.1"], typer.Option(help="Azure AI Foundry Model to use for mini-bc-agent")] = "azure/gpt-4.1",
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.nav_repo_path,
@@ -62,13 +72,16 @@ def evaluate_mini(
         password=password,
         model=model,
         agent_name="mini-bc-agent",
+        category=category,
     )
 
-    run_evaluation_pipeline(
+    pipeline = create_pipeline(category)
+    pipeline.execute(
         context,
         lambda ctx: run_mini_agent(
             entry=ctx.entry,
             repo_path=ctx.repo_path,
+            category=category,
             model=ctx.model,
             container_name=ctx.container_name,
             username=ctx.username,
@@ -87,6 +100,7 @@ def evaluate_copilot(
     container_name: ContainerName,
     username: ContainerUsername,
     password: ContainerPassword,
+    category: EvaluationCategoryOption,
     model: CopilotModel = "claude-haiku-4.5",
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.nav_repo_path,
@@ -121,13 +135,16 @@ def evaluate_copilot(
         password=password,
         model=model,
         agent_name="GitHub Copilot CLI",
+        category=category,
     )
 
-    run_evaluation_pipeline(
+    pipeline = create_pipeline(category)
+    pipeline.execute(
         context,
         lambda ctx: run_copilot_agent(
             entry=ctx.entry,
             repo_path=ctx.repo_path,
+            category=category,
             model=ctx.model,
             output_dir=ctx.result_dir,
         ),
@@ -140,6 +157,7 @@ def evaluate_copilot(
 @evaluate_app.command("mock", hidden=True)
 def evaluate_mock(
     entry_id: Annotated[str, typer.Argument(help="Entry ID to run")],
+    category: EvaluationCategoryOption,
     dataset_path: DatasetPath = _config.paths.dataset_path,
     output_dir: OutputDir = _config.paths.evaluation_results_path,
     run_id: RunId = "mock_run",
@@ -182,6 +200,7 @@ def evaluate_mock(
         password="",
         model="mock-model",
         agent_name="mock-agent",
+        category=category,
         agent_metrics=agent_metrics if agent_metrics else None,
         mcp_servers=mcp_servers,
         custom_instructions=custom_instructions,
@@ -189,11 +208,11 @@ def evaluate_mock(
 
     match random.choice(["success", "build-fail", "test-fail"]):
         case "success":
-            result = EvaluationResult.create_success(context, "MOCK_PATCH_CONTENT")
+            result = BaseEvaluationResult.create_success(context, "MOCK_PATCH_CONTENT")
         case "build-fail":
-            result = EvaluationResult.create_build_failure(context, "MOCK_PATCH_CONTENT", "Mock build failure")
+            result = BaseEvaluationResult.create_build_failure(context, "MOCK_PATCH_CONTENT", "Mock build failure")
         case "test-fail":
-            result = EvaluationResult.create_test_failure(context, "MOCK_PATCH_CONTENT", "Mock test failure")
+            result = BaseEvaluationResult.create_test_failure(context, "MOCK_PATCH_CONTENT", "Mock test failure")
         case _:
             raise ValueError("Invalid mock scenario, this should not happen")
 

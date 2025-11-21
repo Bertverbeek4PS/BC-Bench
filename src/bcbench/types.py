@@ -1,8 +1,9 @@
-"""Evaluation context for managing agent evaluation configuration."""
+"""Shared types and data structures used across BC-Bench modules."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 from bcbench.dataset import DatasetEntry
@@ -32,6 +33,9 @@ class EvaluationContext:
     agent_name: str
     model: str
 
+    # Evaluation category
+    category: EvaluationCategory
+
     # Agent metrics collected during execution
     agent_metrics: dict[str, float | int] | None = None
 
@@ -40,3 +44,10 @@ class EvaluationContext:
 
     # Custom instructions enabled in experiment
     custom_instructions: bool | None = None
+
+
+class EvaluationCategory(str, Enum):
+    BUG_FIX = "bug-fix"
+    TEST_GENERATION = "test-generation"
+    # CODE_REVIEW = "code-review"
+    # EVENT_REQUEST = "event-request"

@@ -6,7 +6,8 @@ import pytest
 from typer.testing import CliRunner
 
 from bcbench.cli import app
-from bcbench.results import EvaluationResult
+from bcbench.results.bugfix import BugFixResult
+from bcbench.types import EvaluationCategory
 
 runner = CliRunner()
 
@@ -82,11 +83,12 @@ def sample_results_directory(tmp_path, sample_dataset_file):
     results_dir.mkdir(parents=True)
 
     # Create sample results
-    result1 = EvaluationResult(
+    result1 = BugFixResult(
         instance_id="test__entry-1",
         project="W1/TestApp",
         model="gpt-4o",
         agent_name="test-agent",
+        category=EvaluationCategory.BUG_FIX,
         resolved=True,
         build=True,
         generated_patch="diff --git a/test.al b/test.al\n+fixed line",
@@ -96,11 +98,12 @@ def sample_results_directory(tmp_path, sample_dataset_file):
     )
     result1.save(results_dir, f"{result1.instance_id}.jsonl")
 
-    result2 = EvaluationResult(
+    result2 = BugFixResult(
         instance_id="test__entry-2",
         project="W1/AnotherApp",
         model="gpt-4o",
         agent_name="test-agent",
+        category=EvaluationCategory.BUG_FIX,
         resolved=False,
         build=True,
         error_message="Test failed",
@@ -110,11 +113,12 @@ def sample_results_directory(tmp_path, sample_dataset_file):
     )
     result2.save(results_dir, f"{result2.instance_id}.jsonl")
 
-    result3 = EvaluationResult(
+    result3 = BugFixResult(
         instance_id="test__entry-3",
         project="W1/ThirdApp",
         model="gpt-4o",
         agent_name="test-agent",
+        category=EvaluationCategory.BUG_FIX,
         resolved=True,
         build=True,
         generated_patch="diff --git a/test3.al b/test3.al\n+another fix",
@@ -381,6 +385,7 @@ def sample_leaderboard_and_summary(tmp_path):
             "build": 9,
             "date": "2025-01-10",
             "model": "gpt-4o",
+            "category": "bug-fix",
             "agent_name": "copilot",
             "average_duration": 120.5,
             "average_prompt_tokens": 5000.0,
@@ -396,6 +401,7 @@ def sample_leaderboard_and_summary(tmp_path):
             "build": 8,
             "date": "2025-01-11",
             "model": "gpt-4-turbo",
+            "category": "test-generation",
             "agent_name": "copilot",
             "average_duration": 110.0,
             "average_prompt_tokens": 4500.0,
@@ -411,6 +417,7 @@ def sample_leaderboard_and_summary(tmp_path):
             "build": 10,
             "date": "2025-01-12",
             "model": "gpt-4o",
+            "category": "bug-fix",
             "agent_name": "mini",
             "average_duration": 95.0,
             "average_prompt_tokens": 3500.0,
@@ -432,8 +439,9 @@ def sample_leaderboard_and_summary(tmp_path):
         "build": 10,  # Improved from 9 to 10
         "date": "2025-01-15",
         "model": "gpt-4o",
+        "category": "bug-fix",
         "agent_name": "copilot",
-        "average_duration": 125.0,
+        "average_duration": 130.0,
         "average_prompt_tokens": 5200.0,
         "average_completion_tokens": 1600.0,
         "github_run_id": "run_004",
@@ -497,6 +505,7 @@ def test_result_update_adds_new_entry(sample_leaderboard_and_summary):
         "build": 10,
         "date": "2025-01-16",
         "model": "gpt-4o",
+        "category": "test-generation",
         "agent_name": "new-agent",
         "average_duration": 100.0,
         "average_prompt_tokens": 4800.0,
@@ -552,6 +561,7 @@ def test_result_update_distinguishes_by_mcp_servers(sample_leaderboard_and_summa
         "build": 9,
         "date": "2025-01-17",
         "model": "gpt-4o",
+        "category": "bug-fix",
         "agent_name": "copilot",
         "average_duration": 115.0,
         "average_prompt_tokens": 4900.0,
