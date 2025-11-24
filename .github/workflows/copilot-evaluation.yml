@@ -69,7 +69,7 @@ jobs:
         uses: ./.github/actions/setup-python-uv
 
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot@0.0.361
+        run: npm install -g @github/copilot@0.0.362
 
       - name: Run GitHub Copilot CLI for entry ${{ matrix.entry }}
         timeout-minutes: 90
