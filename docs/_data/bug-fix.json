@@ -11,6 +11,7 @@
     "average_duration": 133.9,
     "average_prompt_tokens": 1959740.0,
     "average_completion_tokens": 6056.0,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19614090363",
     "experiment": null
@@ -27,6 +28,7 @@
     "average_duration": 136.9,
     "average_prompt_tokens": 990575.0,
     "average_completion_tokens": 5543.8,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19745030800",
     "experiment": null
@@ -43,6 +45,7 @@
     "average_duration": 171.9,
     "average_prompt_tokens": 2410900.0,
     "average_completion_tokens": 9526.5,
+    "average_llm_duration": null,
     "average_tool_usage": {
       "report_intent": 2.03,
       "view": 19.12,
@@ -69,6 +72,7 @@
     "average_duration": 431.0,
     "average_prompt_tokens": 352378.9,
     "average_completion_tokens": 7142.1,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19227643144",
     "experiment": null
@@ -85,6 +89,7 @@
     "average_duration": 328.4,
     "average_prompt_tokens": 478451.0,
     "average_completion_tokens": 3884.3,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19391198996",
     "experiment": null
@@ -101,6 +106,7 @@
     "average_duration": 190.6,
     "average_prompt_tokens": 1924450.0,
     "average_completion_tokens": 6827.3,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19364189001",
     "experiment": {
@@ -123,6 +129,7 @@
     "average_duration": 853.2,
     "average_prompt_tokens": 830300.0,
     "average_completion_tokens": 8707.7,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19378708759",
     "experiment": null
@@ -139,6 +146,7 @@
     "average_duration": 174.3,
     "average_prompt_tokens": 1180605.9,
     "average_completion_tokens": 11734.9,
+    "average_llm_duration": null,
     "average_tool_usage": {
       "report_intent": 2.26,
       "grep": 8.35,
@@ -163,6 +171,7 @@
     "average_duration": 184.1,
     "average_prompt_tokens": 2711195.4,
     "average_completion_tokens": 9409.1,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19386826797",
     "experiment": {
@@ -185,6 +194,7 @@
     "average_duration": 217.1,
     "average_prompt_tokens": 1109352.6,
     "average_completion_tokens": 2323.5,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19388071339",
     "experiment": null
@@ -201,6 +211,7 @@
     "average_duration": 164.0,
     "average_prompt_tokens": 2374900.0,
     "average_completion_tokens": 8768.2,
+    "average_llm_duration": null,
     "average_tool_usage": null,
     "github_run_id": "19411736858",
     "experiment": {
@@ -221,6 +232,7 @@
     "average_duration": 92.5,
     "average_prompt_tokens": 731541.2,
     "average_completion_tokens": 4294.4,
+    "average_llm_duration": null,
     "average_tool_usage": {
       "report_intent": 2.12,
       "grep": 5.24,
@@ -244,6 +256,7 @@
     "average_duration": 181.1,
     "average_prompt_tokens": 2812205.9,
     "average_completion_tokens": 10788.2,
+    "average_llm_duration": null,
     "average_tool_usage": {
       "report_intent": 1.68,
       "view": 19.62,
@@ -275,6 +288,7 @@
     "average_duration": 121.7,
     "average_prompt_tokens": 955202.9,
     "average_completion_tokens": 4741.0,
+    "average_llm_duration": null,
     "average_tool_usage": {
       "report_intent": 2.09,
       "grep": 6.88,
@@ -291,6 +305,37 @@
     "experiment": {
       "mcp_servers": [
         "filesystem"
+      ],
+      "custom_instructions": false,
+      "custom_agent": null
+    }
+  },
+  {
+    "total": 37,
+    "resolved": 21,
+    "failed": 16,
+    "build": 36,
+    "date": "2025-12-01",
+    "model": "claude-opus-4.5",
+    "agent_name": "GitHub Copilot CLI",
+    "category": "bug-fix",
+    "average_duration": 120.4,
+    "average_prompt_tokens": 1026443.2,
+    "average_completion_tokens": 5105.4,
+    "average_llm_duration": 100.97951351351351,
+    "average_tool_usage": {
+      "report_intent": 2.03,
+      "grep": 6.24,
+      "glob": 0.3,
+      "view": 9.54,
+      "edit": 3.27,
+      "powershell": 0.24,
+      "create": 0.03
+    },
+    "github_run_id": "19827920990",
+    "experiment": {
+      "mcp_servers": [
+        "mslearn"
       ],
       "custom_instructions": false,
       "custom_agent": null
