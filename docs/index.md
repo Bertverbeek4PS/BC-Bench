@@ -49,7 +49,7 @@ Comparing experimental configurations against baseline for **claude-haiku-4.5**.
   <tbody>
     {% assign sorted_results = site.data.bug-fix | sort: "resolved" | reverse %}
     {% for result in sorted_results %}
-      {% if result.model == "claude-haiku-4.5" and result.experiment.custom_instructions == false %}
+      {% if result.model == "claude-haiku-4.5" and (result.experiment = null or result.experiment.custom_instructions == false) %}
     <tr>
       <td>{% if result.experiment.mcp_servers %}{{ result.experiment.mcp_servers }}{% else %}None{% endif %}</td>
       <td>{{ result.resolved }} / {{ result.total }} ({{ result.resolved | times: 100.0 | divided_by: result.total | round: 1 }}%)</td>
@@ -76,7 +76,7 @@ Comparing experimental configurations against baseline for **claude-opus-4.5**.
   <tbody>
     {% assign sorted_results = site.data.bug-fix | sort: "resolved" | reverse %}
     {% for result in sorted_results %}
-      {% if result.model == "claude-opus-4.5" and result.experiment.custom_instructions == false %}
+      {% if result.model == "claude-opus-4.5" and (result.experiment = null or result.experiment.custom_instructions == false) %}
     <tr>
       <td>{% if result.experiment.mcp_servers %}{{ result.experiment.mcp_servers }}{% else %}None{% endif %}</td>
       <td>{{ result.resolved }} / {{ result.total }} ({{ result.resolved | times: 100.0 | divided_by: result.total | round: 1 }}%)</td>
