@@ -100,30 +100,6 @@
     "percentage": 10.8
   },
   {
-    "total": 22,
-    "resolved": 11,
-    "failed": 11,
-    "build": 19,
-    "date": "2025-11-14",
-    "model": "claude-haiku-4.5",
-    "agent_name": "GitHub Copilot CLI",
-    "category": "bug-fix",
-    "average_duration": 190.6,
-    "average_prompt_tokens": 1924450.0,
-    "average_completion_tokens": 6827.3,
-    "average_llm_duration": null,
-    "average_tool_usage": null,
-    "github_run_id": "19364189001",
-    "experiment": {
-      "mcp_servers": [
-        "filesystem"
-      ],
-      "custom_instructions": false,
-      "custom_agent": null
-    },
-    "percentage": 50.0
-  },
-  {
     "total": 45,
     "resolved": 20,
     "failed": 25,
@@ -177,30 +153,6 @@
     "github_run_id": "19795586715",
     "experiment": null,
     "percentage": 47.1
-  },
-  {
-    "total": 22,
-    "resolved": 11,
-    "failed": 11,
-    "build": 20,
-    "date": "2025-11-15",
-    "model": "claude-haiku-4.5",
-    "agent_name": "GitHub Copilot CLI",
-    "category": "bug-fix",
-    "average_duration": 184.1,
-    "average_prompt_tokens": 2711195.4,
-    "average_completion_tokens": 9409.1,
-    "average_llm_duration": null,
-    "average_tool_usage": null,
-    "github_run_id": "19386826797",
-    "experiment": {
-      "mcp_servers": [
-        "mslearn"
-      ],
-      "custom_instructions": false,
-      "custom_agent": null
-    },
-    "percentage": 50.0
   },
   {
     "total": 22,
