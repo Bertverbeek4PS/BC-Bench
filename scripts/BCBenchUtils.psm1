@@ -204,12 +204,10 @@ function Wait-JobWithProgress {
 
     Write-Log "Waiting for $StatusMessage to complete (timeout: $TimeoutMinutes minutes)..." -Level Info
 
-    # Calculate timeout
     $timeoutSeconds = $TimeoutMinutes * 60
     $startTime = Get-Date
     $elapsedSeconds = 0
 
-    # Monitor job progress
     do {
         Start-Sleep -Seconds $PollingIntervalSeconds
         $elapsedSeconds = ((Get-Date) - $startTime).TotalSeconds
@@ -218,28 +216,31 @@ function Wait-JobWithProgress {
         $jobState = Get-Job -Id $Job.Id | Select-Object -ExpandProperty State
         Write-Log "$StatusMessage status: $jobState (${remainingMinutes}min remaining)" -Level Info
 
-        # Check for timeout
         if ($elapsedSeconds -ge $timeoutSeconds) {
             Write-Log "$StatusMessage timed out after $TimeoutMinutes minutes" -Level Warning
+            $jobOutput = Receive-Job $Job -ErrorAction SilentlyContinue 2>&1
+            if ($jobOutput) {
+                Write-Log "Job output:" -Level Error
+                $jobOutput | ForEach-Object { Write-Log "  $_" -Level Error }
+            }
             Stop-Job $Job -ErrorAction SilentlyContinue
             Remove-Job $Job -Force -ErrorAction SilentlyContinue
             return $false
         }
     } while ($jobState -eq "Running")
 
-    # Check job results
     if ($jobState -eq "Completed") {
         Write-Log "$StatusMessage completed successfully" -Level Success
         Remove-Job $Job
         return $true
     }
     else {
-        # Get error details
-        $jobError = Receive-Job $Job -ErrorAction SilentlyContinue
-        $jobOutput = Receive-Job $Job
+        $jobOutput = Receive-Job $Job -ErrorAction SilentlyContinue 2>&1
         Write-Log "$StatusMessage failed. State: $jobState" -Level Error
-        if ($jobError) { Write-Log "Error details: $jobError" -Level Error }
-        if ($jobOutput) { Write-Log "Output: $jobOutput" -Level Debug }
+        if ($jobOutput) {
+            Write-Log "Job output:" -Level Error
+            $jobOutput | ForEach-Object { Write-Log "  $_" -Level Error }
+        }
         Remove-Job $Job
         return $false
     }
