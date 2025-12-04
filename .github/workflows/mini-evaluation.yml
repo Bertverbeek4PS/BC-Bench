@@ -8,10 +8,12 @@ on:
       model:
         description: "model to use for evaluation"
         required: false
-        default: "azure/gpt-4.1"
+        default: "azure/gpt-5.1-codex-mini"
         type: choice
         options:
-          - "azure/gpt-4.1"
+          - "azure/gpt-5.1-codex-mini"
+          - "azure/claude-haiku-4-5"
+          - "azure/claude-opus-4-5"
       category:
         description: "Evaluation category to run"
         required: false
@@ -48,7 +50,7 @@ jobs:
     name: ${{ matrix.entry }}
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 10
       matrix:
         entry: ${{ fromJson(needs.get-entries.outputs.entries) }}
     steps:
@@ -68,11 +70,10 @@ jobs:
         uses: ./.github/actions/setup-python-uv
 
       - name: Run mini-bc-agent for entry ${{ matrix.entry }}
-        timeout-minutes: 90
+        timeout-minutes: 60
         env:
           AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
           AZURE_API_BASE: ${{ secrets.AZURE_API_BASE }}
-          AZURE_API_VERSION: ${{ secrets.AZURE_API_VERSION }}
         run: |
           uv run bcbench evaluate mini "${{ matrix.entry }}" `
             --model "${{ inputs.model }}" `

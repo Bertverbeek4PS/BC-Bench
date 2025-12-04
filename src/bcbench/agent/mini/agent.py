@@ -84,7 +84,7 @@ def run_mini_agent(
     BCAgent = _create_bc_agent_class()
 
     agent = BCAgent(
-        LitellmModel(model_name=model),
+        LitellmModel(model_name=model, cost_tracking="ignore_errors"),
         BCEnvironment(
             repo_path=str(repo_path),
             project_paths=entry.project_paths,
