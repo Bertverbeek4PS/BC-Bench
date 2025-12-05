@@ -38,7 +38,7 @@ runs:
       shell: pwsh
 
     - name: Install BcContainerHelper module
-      run: Install-Module -Name BcContainerHelper -Force -AllowClobber
+      run: Install-Module -Name BcContainerHelper -Force -AllowClobber -AllowPrerelease
       shell: pwsh
 
     - name: Azure Login with OIDC for cloning internal repository
