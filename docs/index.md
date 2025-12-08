@@ -49,7 +49,7 @@ Comparing experimental configurations for GitHub Copilot CLI with **claude-haiku
   <tbody>
     {% assign sorted_results = site.data.bug-fix | sort: "percentage" | reverse %}
     {% for result in sorted_results %}
-      {% if result.model == "claude-opus-4-5" and result.agent_name == "GitHub Copilot CLI" %}
+      {% if result.model == "claude-haiku-4-5" and result.agent_name == "GitHub Copilot CLI" %}
         {% unless result.experiment.custom_instructions == true %}
     <tr>
       <td>{% if result.experiment.mcp_servers %}{{ result.experiment.mcp_servers }}{% else %}None{% endif %}</td>
