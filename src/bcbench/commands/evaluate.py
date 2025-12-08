@@ -39,7 +39,7 @@ def evaluate_mini(
     username: ContainerUsername,
     password: ContainerPassword,
     category: EvaluationCategoryOption,
-    model: FoundryModel = "azure/gpt-5.1-codex-mini",
+    model: FoundryModel = "claude-haiku-4-5",
     dataset_path: DatasetPath = _config.paths.dataset_path,
     repo_path: RepoPath = _config.paths.testbed_path,
     output_dir: OutputDir = _config.paths.evaluation_results_path,
@@ -71,7 +71,7 @@ def evaluate_mini(
         container_name=container_name,
         username=username,
         password=password,
-        model=model,
+        model="azure/" + model,
         agent_name="mini-bc-agent",
         category=category,
     )
