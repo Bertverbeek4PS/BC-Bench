@@ -7,7 +7,7 @@ from bcbench.collection.patch_utils import extract_file_paths_from_patch
 from bcbench.config import get_config
 from bcbench.dataset import TestEntry
 from bcbench.evaluate.base import EvaluationPipeline
-from bcbench.exceptions import BuildError, TestExecutionError
+from bcbench.exceptions import BuildError, NoTestsExtractedError, TestExecutionError
 from bcbench.logger import get_logger, github_log_group
 from bcbench.operations import (
     apply_patch,
@@ -103,10 +103,11 @@ class TestGenerationPipeline(EvaluationPipeline):
             if full_path.exists():
                 file_contents[file_path] = full_path.read_text(encoding="utf-8")
 
-        generated_tests: list[TestEntry] = extract_tests_from_patch(generated_patch, file_contents)
         result: TestGenerationResult | None = None
 
         try:
+            generated_tests: list[TestEntry] = extract_tests_from_patch(generated_patch, file_contents)
+
             build_and_publish_projects(
                 context.repo_path,
                 test_projects,
@@ -143,6 +144,10 @@ class TestGenerationPipeline(EvaluationPipeline):
                 result = TestGenerationResult.create_test_failure(context, generated_patch, "Generated tests Failed post-patch", pre_patch_failed=True, post_patch_passed=False)
 
             logger.error(f"Tests failed during evaluation of {context.entry.instance_id}: {e}")
+
+        except NoTestsExtractedError:
+            result = TestGenerationResult.create_no_tests_extracted(context, generated_patch, "No tests extracted from generated patch")
+            raise
 
         finally:
             if result is not None:
