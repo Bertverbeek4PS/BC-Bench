@@ -108,6 +108,19 @@ How it works (take `NAV` repo as example):
 2. All files under `microsoftInternal-NAV` will be copied into `NAV/.github/` (overwrite if exists)
 3. If `enabled: false` a `--no-custom-instructions` flag is passed instead.
 
+### Experimenting with Custom Agents
+
+Enable instruction in the [config.yaml](src/bcbench/agent/copilot/config.yaml):
+
+```yaml
+# controls:
+# 1. whether to copy custom agents (`src/bcbench/agent/copilot/instructions/<sanitized-repo>/agents/`) into the repo
+# 2. whether to pass --agent=<agent-name> to copilot
+agents:
+  enabled: true
+  name: ALTest
+```
+
 ### Results & Metrics
 
 You can find all results in the GitHub Action (workflow: `copilot-evaluation`) directly:
