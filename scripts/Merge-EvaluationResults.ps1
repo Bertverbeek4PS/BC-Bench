@@ -19,31 +19,39 @@ if ($resultFolders.Count -eq 0) {
     exit 1
 }
 
-[string] $runId = ($resultFolders[0].Name -split '-')[2]
-$OutputFile = Join-Path $InputDir "$runId.jsonl"
+# Group folders by run ID (second segment after splitting by '-')
+$foldersByRunId = $resultFolders | Group-Object { ($_.Name -split '-')[2] }
+Write-Log "Found $($foldersByRunId.Count) run(s) to process"
 
-Write-Log "Merging results for run $runId to $OutputFile"
-
-# Merge all JSONL files
-$jsonlFiles = $resultFolders | ForEach-Object { Get-ChildItem $_.FullName -Filter "*.jsonl" -Recurse }
-$evaluatedIds = $jsonlFiles | Get-Content | Tee-Object -FilePath $OutputFile | ForEach-Object { ($_ | ConvertFrom-Json).instance_id }
-
-Write-Log "Merged $($evaluatedIds.Count) results from $($jsonlFiles.Count) files" -Level Success
-
-# Report missing instances
 $datasetIds = (Get-DatasetEntries -DatasetPath $DatasetFile).instance_id
-$missing = $datasetIds | Where-Object { $_ -notin $evaluatedIds }
 
-if ($missing) {
-    Write-Log "Missing $($missing.Count) of $($datasetIds.Count) instances:" -Level Warning
-    $missing | ForEach-Object { Write-Log "  $_" -Level Warning }
+foreach ($runGroup in $foldersByRunId) {
+    $runId = $runGroup.Name
+    $runFolders = $runGroup.Group
+    $OutputFile = Join-Path $InputDir "$runId.jsonl"
+
+    Write-Log "Merging results for run $runId to $OutputFile"
+
+    # Merge all JSONL files for this run
+    $jsonlFiles = $runFolders | ForEach-Object { Get-ChildItem $_.FullName -Filter "*.jsonl" -Recurse }
+    $evaluatedIds = $jsonlFiles | Get-Content | Tee-Object -FilePath $OutputFile | ForEach-Object { ($_ | ConvertFrom-Json).instance_id }
+
+    Write-Log "Merged $($evaluatedIds.Count) results from $($jsonlFiles.Count) files" -Level Success
+
+    # Report missing instances
+    $missing = $datasetIds | Where-Object { $_ -notin $evaluatedIds }
+
+    if ($missing) {
+        Write-Log "Missing $($missing.Count) of $($datasetIds.Count) instances:" -Level Warning
+        $missing | ForEach-Object { Write-Log "  $_" -Level Warning }
+    }
+    else {
+        Write-Log "All $($datasetIds.Count) instances evaluated!" -Level Success
+    }
+
+    # Cleanup folders for this run
+    $runFolders | Remove-Item -Recurse -Force
+    Write-Log "Cleaned up $($runFolders.Count) folders for run $runId" -Level Success
 }
-else {
-    Write-Log "All $($datasetIds.Count) instances evaluated!" -Level Success
-}
 
-# Cleanup
-$resultFolders | Remove-Item -Recurse -Force
-Write-Log "Cleaned up $($resultFolders.Count) folders" -Level Success
-
-Write-Host "`nDone! Deleted $($resultFolders.Count) folders."
+Write-Host "`nDone! Processed $($foldersByRunId.Count) run(s), deleted $($resultFolders.Count) folders total."
