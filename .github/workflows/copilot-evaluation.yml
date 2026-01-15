@@ -1,6 +1,7 @@
 name: Evaluation with GitHub Copilot
 permissions:
   contents: read
+  actions: write
 
 on:
   workflow_dispatch:
@@ -38,6 +39,21 @@ on:
         required: false
         default: false
         type: boolean
+      repeat:
+        description: "Number of times to run sequentially (ignored for test runs)"
+        required: false
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+          - "5"
+
+concurrency:
+  group: copilot-evaluation-${{ inputs.test-run && 'test' || 'full' }}
+  cancel-in-progress: false
 
 env:
   EVALUATION_RESULTS_DIR: evaluation_results
@@ -135,3 +151,21 @@ jobs:
       mock: ${{ inputs.test-run }}
       category: ${{ inputs.category }}
     secrets: inherit
+
+  requeue-if-needed:
+    needs: summarize-results
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.test-run && inputs.repeat != '1' }}
+    steps:
+      - name: Trigger next run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run copilot-evaluation.yml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.sha }} \
+            -f model="${{ inputs.model }}" \
+            -f category="${{ inputs.category }}" \
+            -f test-run="${{ inputs.test-run }}" \
+            -f al-mcp="${{ inputs.al-mcp }}" \
+            -f repeat="$(( ${{ inputs.repeat }} - 1 ))"
