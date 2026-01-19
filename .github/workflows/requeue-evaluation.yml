@@ -21,33 +21,22 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.repeat != '1' }}
     steps:
-      - name: Find or create tag for requeue
+      - name: Create tag for requeue
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           COMMIT_SHA="${{ github.sha }}"
 
-          # Check if any tag already exists on this commit
-          # Use 2>/dev/null to suppress errors and || true to handle 404 when no tags exist
-          EXISTING_TAG=$(gh api repos/${{ github.repository }}/git/refs/tags 2>/dev/null \
-            | jq -r ".[] | select(.object.sha == \"${COMMIT_SHA}\") | .ref" 2>/dev/null \
-            | head -n 1 | sed 's|refs/tags/||') || true
-
           # Extract agent name from workflow file (e.g., "claude-evaluation.yml" -> "claude")
           WORKFLOW_FILE="${{ inputs.workflow-file }}"
           AGENT_NAME="${WORKFLOW_FILE%%-evaluation.yml}"
 
-          if [ -n "${EXISTING_TAG}" ] && [ "${EXISTING_TAG}" != "null" ]; then
-            echo "Reusing existing tag: ${EXISTING_TAG}"
-            TAG_NAME="${EXISTING_TAG}"
-          else
-            TAG_NAME="eval-run-${AGENT_NAME}-${{ github.run_id }}"
-            echo "Creating ephemeral tag: ${TAG_NAME}"
-            gh api repos/${{ github.repository }}/git/refs \
-              --method POST \
-              -f ref="refs/tags/${TAG_NAME}" \
-              -f sha="${COMMIT_SHA}"
-          fi
+          TAG_NAME="eval-run-${AGENT_NAME}-${{ github.run_id }}"
+          echo "Creating ephemeral tag: ${TAG_NAME}"
+          gh api repos/${{ github.repository }}/git/refs \
+            --method POST \
+            -f ref="refs/tags/${TAG_NAME}" \
+            -f sha="${COMMIT_SHA}"
 
           # Build the workflow dispatch command with inputs from JSON
           INPUTS_JSON='${{ inputs.workflow-inputs }}'
