@@ -147,3 +147,43 @@ def result_update(
         f.write("\n")
 
     logger.info(f"Successfully updated leaderboard at: {leaderboard_path}")
+
+
+@result_app.command("refresh")
+def result_refresh(
+    leaderboard_dir: Annotated[Path, typer.Option(help="Path to the directory containing category-specific leaderboard files")] = _config.paths.leaderboard_dir,
+):
+    """
+    Refresh all leaderboard aggregates without adding new data.
+
+    Recalculates aggregate metrics for all category-specific leaderboard files
+    based on their existing runs. Useful when the aggregation logic has changed.
+    """
+    leaderboard_files: list[Path] = list(leaderboard_dir.glob("*.json"))
+
+    if not leaderboard_files:
+        logger.error(f"No leaderboard files found in: {leaderboard_dir}")
+        raise typer.Exit(code=1)
+
+    logger.info(f"Found {len(leaderboard_files)} leaderboard file(s) to refresh")
+
+    for leaderboard_path in leaderboard_files:
+        logger.info(f"Refreshing: {leaderboard_path.name}")
+
+        leaderboard: Leaderboard = Leaderboard.load(leaderboard_path)
+        runs: list[EvaluationResultSummary] = list(leaderboard.runs)
+
+        if not runs:
+            logger.warning(f"No runs found in {leaderboard_path.name}, skipping")
+            continue
+
+        # Rebuild aggregates from existing runs
+        aggregates = _rebuild_aggregates(runs)
+
+        # Write back
+        leaderboard = Leaderboard(runs=runs, aggregate=aggregates)
+        with open(leaderboard_path, "w", encoding="utf-8") as f:
+            json.dump(leaderboard.to_dict(), f, indent=2)
+            f.write("\n")
+
+        logger.info(f"Refreshed {leaderboard_path.name}: {len(runs)} runs -> {len(aggregates)} aggregates")

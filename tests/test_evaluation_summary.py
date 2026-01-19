@@ -560,3 +560,84 @@ class TestLeaderboard:
         assert "aggregate" in data
         assert len(data["runs"]) == 1
         assert data["aggregate"][0]["pass_power_1"] == 1
+
+    def test_aggregate_from_legacy_runs_without_instance_results(self):
+        """TRANSITION: Test that legacy runs without instance_results use direct resolved count."""
+        from bcbench.results.evaluation_result import LeaderboardAggregate
+
+        # Create a summary without instance_results (simulates legacy data)
+        legacy_run = EvaluationResultSummary(
+            total=10,
+            resolved=6,
+            failed=4,
+            build=8,
+            percentage=60.0,
+            date=date.today(),
+            model="gpt-4",
+            agent_name="test-agent",
+            category=EvaluationCategory.BUG_FIX,
+            average_duration=100.0,
+            average_prompt_tokens=1000.0,
+            average_completion_tokens=500.0,
+            instance_results=None,  # Legacy: no instance_results
+        )
+
+        agg = LeaderboardAggregate.from_runs([legacy_run])
+
+        assert agg.num_runs == 1
+        assert agg.total == 10
+        # Should fall back to resolved count from the run
+        assert agg.pass_power_1 == 6
+        assert agg.pass_power_3 is None
+        assert agg.pass_power_5 is None
+
+    def test_aggregate_from_mixed_runs_with_and_without_instance_results(self):
+        """TRANSITION: Test that only runs with instance_results contribute to pass^k calculation."""
+        from bcbench.results.evaluation_result import LeaderboardAggregate
+
+        # Legacy run without instance_results
+        legacy_run = EvaluationResultSummary(
+            total=3,
+            resolved=2,
+            failed=1,
+            build=3,
+            percentage=66.7,
+            date=date.today(),
+            model="gpt-4",
+            agent_name="test-agent",
+            category=EvaluationCategory.BUG_FIX,
+            average_duration=100.0,
+            average_prompt_tokens=1000.0,
+            average_completion_tokens=500.0,
+            instance_results=None,
+        )
+
+        # New run with instance_results
+        new_run = EvaluationResultSummary.from_results(
+            [
+                create_bugfix_result(instance_id="test__1", resolved=True),
+                create_bugfix_result(instance_id="test__2", resolved=False),
+                create_bugfix_result(instance_id="test__3", resolved=True),
+            ],
+            run_id="run_2",
+        )
+
+        agg = LeaderboardAggregate.from_runs([legacy_run, new_run])
+
+        assert agg.num_runs == 2
+        assert agg.total == 3
+        # pass^1 should be based only on runs with instance_results (1 run has data)
+        assert agg.pass_power_1 == 2  # test__1 and test__3 resolved in run with data
+        assert agg.pass_power_3 is None  # Only 1 run has instance_results
+
+    def test_load_empty_leaderboard_file(self, tmp_path):
+        """Test loading a leaderboard file that contains an empty array."""
+        from bcbench.results.evaluation_result import Leaderboard
+
+        empty_file = tmp_path / "empty.json"
+        empty_file.write_text("[]")
+
+        leaderboard = Leaderboard.load(empty_file)
+
+        assert leaderboard.runs == []
+        assert leaderboard.aggregate == []

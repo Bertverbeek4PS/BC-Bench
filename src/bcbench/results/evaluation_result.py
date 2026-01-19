@@ -123,6 +123,30 @@ class LeaderboardAggregate(BaseModel):
         total: int = first_run.total
         num_runs: int = len(runs)
 
+        # Average duration across runs
+        durations: list[float] = [r.average_duration for r in runs if r.average_duration]
+        average_duration: float | None = sum(durations) / len(durations) if durations else None
+
+        # TRANSITION LOGIC: Handle legacy runs without instance_results
+        # This block should be removed once all runs have instance_results populated
+        runs_with_instance_results = [r for r in runs if r.instance_results]
+        if not runs_with_instance_results:
+            # No runs have instance_results - fall back to direct resolved count from first run
+            # This preserves the old behavior for legacy data
+            return cls(
+                model=first_run.model,
+                agent_name=first_run.agent_name,
+                category=first_run.category,
+                experiment=first_run.experiment,
+                total=total,
+                num_runs=num_runs,
+                pass_power_1=first_run.resolved if num_runs >= 1 else None,
+                pass_power_3=first_run.resolved if num_runs >= 3 else None,
+                pass_power_5=first_run.resolved if num_runs >= 5 else None,
+                average_duration=round(average_duration, 1) if average_duration else None,
+            )
+        # END TRANSITION LOGIC
+
         # Collect per-instance results across runs: instance_id -> list of resolved booleans
         instance_resolved: dict[str, list[bool]] = {}
         for run in runs:
@@ -133,13 +157,11 @@ class LeaderboardAggregate(BaseModel):
                     instance_resolved[instance_id].append(resolved)
 
         # Calculate pass^k metrics (instances resolved in at least one of first k runs)
-        pass_power_1 = _calculate_pass_power_k(instance_resolved, 1) if num_runs >= 1 else None
-        pass_power_3 = _calculate_pass_power_k(instance_resolved, 3) if num_runs >= 3 else None
-        pass_power_5 = _calculate_pass_power_k(instance_resolved, 5) if num_runs >= 5 else None
-
-        # Average duration across runs
-        durations: list[float] = [r.average_duration for r in runs if r.average_duration]
-        average_duration: float | None = sum(durations) / len(durations) if durations else None
+        # Only count runs that have instance_results for the k calculation
+        num_runs_with_data = len(runs_with_instance_results)
+        pass_power_1 = _calculate_pass_power_k(instance_resolved, 1) if num_runs_with_data >= 1 else None
+        pass_power_3 = _calculate_pass_power_k(instance_resolved, 3) if num_runs_with_data >= 3 else None
+        pass_power_5 = _calculate_pass_power_k(instance_resolved, 5) if num_runs_with_data >= 5 else None
 
         return cls(
             model=first_run.model,
@@ -164,7 +186,11 @@ class Leaderboard(BaseModel):
         if not path.exists():
             return cls(runs=[], aggregate=[])
         with open(path, encoding="utf-8") as f:
-            return cls.model_validate(json.load(f))
+            data = json.load(f)
+            # Handle empty arrays or invalid structures
+            if not data or not isinstance(data, dict):
+                return cls(runs=[], aggregate=[])
+            return cls.model_validate(data)
 
     def to_dict(self) -> dict[str, Any]:
         return {

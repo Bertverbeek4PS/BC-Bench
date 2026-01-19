@@ -858,3 +858,101 @@ def test_result_update_replaces_oldest_when_exceeding_n(sample_leaderboard_and_s
     newest = next(r for r in final_copilot_runs if r["date"] == "2025-01-20")
     assert newest["resolved"] == 9
     assert newest["github_run_id"] == "run_sixth"
+
+
+@pytest.mark.integration
+def test_result_refresh_recalculates_aggregates(sample_leaderboard_and_summary):
+    leaderboard_dir, _ = sample_leaderboard_and_summary
+    bugfix_leaderboard_path = leaderboard_dir / "bug-fix.json"
+
+    # Corrupt the aggregates to verify refresh recalculates them
+    with open(bugfix_leaderboard_path) as f:
+        leaderboard = json.load(f)
+
+    for agg in leaderboard["aggregate"]:
+        agg["pass_power_1"] = 999  # Invalid value
+
+    with open(bugfix_leaderboard_path, "w") as f:
+        json.dump(leaderboard, f, indent=2)
+
+    # Run refresh command
+    result = runner.invoke(app, ["result", "refresh", "--leaderboard-dir", str(leaderboard_dir)])
+    assert result.exit_code == 0
+
+    # Verify aggregates were recalculated correctly
+    with open(bugfix_leaderboard_path) as f:
+        refreshed = json.load(f)
+
+    # Should have 2 aggregates (copilot with servers, mini without)
+    assert len(refreshed["aggregate"]) == 2
+
+    # All pass_power_1 values should be recalculated (not 999)
+    for agg in refreshed["aggregate"]:
+        assert agg["pass_power_1"] != 999
+        assert agg["pass_power_1"] > 0
+
+
+@pytest.mark.integration
+def test_result_refresh_handles_empty_leaderboard(tmp_path):
+    # Create an empty leaderboard file
+    empty_leaderboard = tmp_path / "bug-fix.json"
+    empty_leaderboard.write_text("[]")
+
+    result = runner.invoke(app, ["result", "refresh", "--leaderboard-dir", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "No runs found" in result.output
+
+
+@pytest.mark.integration
+def test_result_refresh_handles_legacy_runs_without_instance_results(tmp_path):
+    """Test that refresh handles legacy runs that don't have instance_results."""
+    leaderboard_path = tmp_path / "bug-fix.json"
+
+    legacy_data = {
+        "runs": [
+            {
+                "total": 10,
+                "resolved": 6,
+                "failed": 4,
+                "build": 9,
+                "percentage": 60.0,
+                "date": "2025-01-10",
+                "model": "gpt-4o",
+                "category": "bug-fix",
+                "agent_name": "legacy-agent",
+                "average_duration": 100.0,
+                "average_prompt_tokens": 4000.0,
+                "average_completion_tokens": 1200.0,
+                "average_llm_duration": 70.0,
+                "github_run_id": "run_legacy",
+                "experiment": None,
+                "instance_results": None,  # Legacy: no instance_results
+            },
+        ],
+        "aggregate": [
+            {
+                "model": "gpt-4o",
+                "agent_name": "legacy-agent",
+                "category": "bug-fix",
+                "experiment": None,
+                "total": 10,
+                "num_runs": 1,
+                "average_duration": 100.0,
+                "pass_power_1": 0,  # Incorrectly set to 0
+                "pass_power_3": None,
+                "pass_power_5": None,
+            },
+        ],
+    }
+
+    with open(leaderboard_path, "w") as f:
+        json.dump(legacy_data, f, indent=2)
+
+    result = runner.invoke(app, ["result", "refresh", "--leaderboard-dir", str(tmp_path)])
+    assert result.exit_code == 0
+
+    with open(leaderboard_path) as f:
+        refreshed = json.load(f)
+
+    # Should fall back to resolved count from run
+    assert refreshed["aggregate"][0]["pass_power_1"] == 6
