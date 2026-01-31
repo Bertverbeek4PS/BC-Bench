@@ -112,12 +112,15 @@ class FailureModeAnalysis(App):
         build = scores.get("BuildRate", 0) == 1
         resolved = scores.get("ResolutionRate", 0) == 1
 
-        # Progress: [1/47] (reviewed: 5) | Build: ✓ Resolved: ✗ | instance_id
+        # Progress: [1/47] (reviewed: 5) | Build: ✓ Resolved: ✗ | Category: X | instance_id
         instance_id = result.get("instance_id") or result.get("InstanceID", "unknown")
         reviewed = sum(1 for i in self.unresolved_indices if self.results[i].get("review", {}).get("failure_category"))
         build_str = "[green]✓[/green]" if build else "[red]✗[/red]"
         resolved_str = "[green]✓[/green]" if resolved else "[red]✗[/red]"
-        self.query_one("#progress", Label).update(f"[{self.current_index + 1}/{len(self.unresolved_indices)}] (reviewed: {reviewed}) | Build: {build_str} Resolved: {resolved_str} | {instance_id}")
+        current_category = result.get("review", {}).get("failure_category") or "[dim]None[/dim]"
+        self.query_one("#progress", Label).update(
+            f"[{self.current_index + 1}/{len(self.unresolved_indices)}] (reviewed: {reviewed}) | Build: {build_str} Resolved: {resolved_str} | Category: {current_category} | {instance_id}"
+        )
 
         # Show diffs side by side
         expected = self.dataset_lookup.get(instance_id, "Not found in dataset")
@@ -138,14 +141,16 @@ class FailureModeAnalysis(App):
             return "(empty)"
         lines = []
         for line in text.split("\n"):
+            # Escape all square brackets to prevent Rich markup interpretation
+            escaped = line.replace("[", r"\[")
             if line.startswith(("+++", "---", "@@")):
-                lines.append(f"[cyan]{line}[/cyan]")
+                lines.append(f"[cyan]{escaped}[/cyan]")
             elif line.startswith("+"):
-                lines.append(f"[green]{line}[/green]")
+                lines.append(f"[green]{escaped}[/green]")
             elif line.startswith("-"):
-                lines.append(f"[red]{line}[/red]")
+                lines.append(f"[red]{escaped}[/red]")
             else:
-                lines.append(line)
+                lines.append(escaped)
         return "\n".join(lines)
 
     def _save(self) -> None:
