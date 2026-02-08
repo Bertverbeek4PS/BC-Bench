@@ -71,7 +71,7 @@ How it works (take `NAV` repo as example):
 2. All files under `microsoftInternal-NAV` will be copied into `NAV/.github/` (overwrite if exists)
 3. If `enabled: false` a `--no-custom-instructions` flag is passed instead.
 
-### Custom Skills
+### Skills
 
 Enable skills in the [config.yaml](src/bcbench/agent/shared/config.yaml):
 
