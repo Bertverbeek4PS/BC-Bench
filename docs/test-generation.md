@@ -15,7 +15,7 @@ This category "reverses" the SWE-Bench workflow: instead of generating a fix, th
     <tr>
       <th>Agent</th>
       <th>Model</th>
-      mean (95% bootstap CI)
+      <th>mean (95% bootstap CI)</th>
       <th>pass^5</th>
       <th>Avg Time</th>
       <th>Version</th>
@@ -49,7 +49,7 @@ Comparing experimental configurations for GitHub Copilot CLI with `ALTest` custo
   <thead>
     <tr>
       <th>Custom Agent</th>
-      mean (95% bootstap CI)
+      <th>mean (95% bootstap CI)</th>
       <th>pass^5</th>
       <th>Avg Time</th>
       <th>Ver</th>
