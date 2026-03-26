@@ -123,6 +123,8 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ steps.select-pat.outputs.pat_index == '0' && secrets.COPILOT_PAT || (steps.select-pat.outputs.pat_index == '1' && secrets.COPILOT_PAT2 || secrets.COPILOT_PAT3) }}
         run: |
+          Write-Output "::add-mask::$env:COPILOT_GITHUB_TOKEN"
+
           uv run bcbench evaluate copilot "${{ matrix.entry }}" `
             --model "${{ inputs.model }}" `
             --category "${{ inputs.category }}" `

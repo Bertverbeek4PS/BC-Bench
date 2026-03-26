@@ -85,6 +85,7 @@ jobs:
           AZURE_API_BASE: ${{ secrets.AZURE_API_BASE }}
         run: |
           $env:AZURE_AD_TOKEN = az account get-access-token --resource https://cognitiveservices.azure.com --query accessToken -o tsv
+          Write-Output "::add-mask::$env:AZURE_AD_TOKEN"
 
           uv run bcbench evaluate mini "${{ matrix.entry }}" `
             --model "${{ inputs.model }}" `

@@ -12,15 +12,12 @@ on:
         type: boolean
   schedule:
     - cron: "0 0 * * 0" # Weekly on Sundays at midnight
-  pull_request:
-    paths:
-      - "dataset/**"
 
 jobs:
   get-entries:
     uses: ./.github/workflows/get-entries.yml
     with:
-      modified-only: ${{ github.event_name == 'pull_request' }}
+      modified-only: false
       test-run: ${{ inputs.test-run || false }}
 
   verify-build-and-tests:
