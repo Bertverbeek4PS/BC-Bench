@@ -67,7 +67,7 @@ jobs:
       category: ${{ inputs.category }}
 
   evaluate-with-copilot-cli:
-    runs-on: [ GitHub-BCBench ]
+    runs-on: ubuntu-latest
     needs: get-entries
     outputs:
       results-dir: ${{ env.EVALUATION_RESULTS_DIR }}
